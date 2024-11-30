@@ -100,10 +100,19 @@ if 'class_name' not in st.session_state:
 if 'teacher_name' not in st.session_state:
     st.session_state['teacher_name'] = ""
 
-grade = st.selectbox("학년", ["1학년", "2학년", "3학년"], key="grade_selectbox")[0]
-class_name = st.selectbox("반", [f"{i}반" for i in range(1, 13)], key="class_selectbox").replace("반", "")
-teacher_name = st.text_input("담임교사 성명", key="teacher_name_input")
-confirmation_date = st.date_input("결석확인일", st.session_state['confirmation_date'], key="confirmation_date_input")
+# 학년, 반을 한 행에 배치
+col1, col2 = st.columns(2)
+with col1:
+    grade = st.selectbox("학년", ["1학년", "2학년", "3학년"], key="grade_selectbox")[0]
+with col2:
+    class_name = st.selectbox("반", [f"{i}반" for i in range(1, 13)], key="class_selectbox").replace("반", "")
+
+# 담임교사 성명, 결석확인일을 한 행에 배치
+col3, col4 = st.columns(2)
+with col3:
+    teacher_name = st.text_input("담임교사 성명", key="teacher_name_input")
+with col4:
+    confirmation_date = st.date_input("결석확인일", st.session_state['confirmation_date'], key="confirmation_date_input")
 
 if st.button("엑셀 파일 업로드하기", key="next_step_button"):
     st.session_state['confirmation_date_str'] = confirmation_date.strftime('%Y.%m.%d')

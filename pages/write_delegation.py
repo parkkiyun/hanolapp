@@ -30,13 +30,13 @@ st.set_page_config(layout="wide")
 resources = ResourceManager()
 resources.validate_resources()
 
-# JSON 파일 로드
-with open("form_config.json", "r", encoding="utf-8") as f:
-    form_configs = json.load(f)
-
 # URL Query Parameters 읽기
 query_params = st.query_params
 form_type = query_params.get("form_type", "학업성적관리위원회 위임장")
+
+# JSON 파일 로드
+with open("form_config.json", "r", encoding="utf-8") as f:
+    form_configs = json.load(f)
 
 # form_config 가져오기
 if form_type in form_configs:
@@ -46,14 +46,14 @@ else:
 
 # 로고 이미지 로드 및 크기 조정
 logo = Image.open("images/logo.png")
-# 서브타이틀 높이에 맞추도록 크기 조정 (약 50px 높이)
-logo_height = 50
+# 서브타이틀 높이에 맞추도록 크기 조정 (약 40px 높이로 축소)
+logo_height = 40
 aspect_ratio = logo.size[0] / logo.size[1]
 logo_width = int(logo_height * aspect_ratio)
 logo = logo.resize((logo_width, logo_height))
 
 # 타이틀과 서브타이틀을 포함할 컨테이너
-col1, col2, col3 = st.columns([1, 3, 1])
+col1, col2, col3 = st.columns([1, 6, 1])
 
 def image_to_base64(image):
     buffered = BytesIO()
@@ -65,22 +65,52 @@ with col2:
     title_text = form_config.get("title", "학업성적관리위원회") + " 위임장"
     st.markdown(f"<h1 style='text-align: center;'>{title_text}</h1>", unsafe_allow_html=True)
     
-    # 로고와 서브타이틀을 한 줄에 표시 (비율 조정)
-    subcol1, subcol2, subcol3 = st.columns([2, 3, 1])
-    with subcol1:
-        # 오른쪽 정렬로 로고 표시
-        st.markdown(
-            f'<div style="display: flex; justify-content: flex-end;">'
-            f'<img src="data:image/png;base64,{image_to_base64(logo)}" width="{logo_width}px" height="{logo_height}px">'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-    with subcol2:
-        # 가운데 정렬로 서브타이틀 표시
-        st.markdown(
-            '<h3 style="text-align: center; margin-top: 5px;">온양한올고등학교</h3>', 
-            unsafe_allow_html=True
-        )
+    # CSS로 반응형 레이아웃 구현
+    st.markdown("""
+        <style>
+            .header-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: nowrap;
+                gap: 10px;
+                margin: 0 auto;
+                max-width: 600px;
+            }
+            .logo-container {
+                flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+            }
+            .title-container {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+            @media (max-width: 640px) {
+                .header-container {
+                    gap: 5px;
+                }
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # 로고와 서브타이틀을 하나의 컨테이너에 배치
+    st.markdown(
+        f"""
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="data:image/png;base64,{image_to_base64(logo)}" 
+                     width="{logo_width}px" 
+                     height="{logo_height}px" 
+                     style="object-fit: contain;">
+            </div>
+            <div class="title-container">
+                <h3 style="margin: 0;">온양한올고등학교</h3>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # 권한 체크
 auth_manager = AuthManager()

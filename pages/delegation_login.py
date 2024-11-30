@@ -3,6 +3,7 @@ import json
 import os
 from app.auth_manager import AuthManager
 from app.sidebar_manager import SidebarManager
+from io import BytesIO
 
 # 권한 체크
 auth_manager = AuthManager()
@@ -15,42 +16,11 @@ sidebar_manager.render_sidebar()
 # 로그인 상태가 아니면 리다이렉트
 if not st.session_state.get("authenticated", False):
     st.error("이 페이지는 교사 로그인이 필요합니다.")
-    st.switch_page("pages/dashboard.py")
-# 초기 비밀번호 설정
-PASSWORD = "teacher123"
+    st.switch_page("Home.py")
 
-# 인증 상태 초기화
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-def show_login():
-    """로그인 화면"""
-    # 중앙 정렬을 위한 컬럼 설정
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        st.markdown("<h1 style='text-align: center;'>업무 페이지</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center;'>접근하려면 비밀번호를 입력하세요.</p>", unsafe_allow_html=True)
-        
-        # 비밀번호 입력 필드
-        password = st.text_input("비밀번호", type="password", key="password")
-        
-        # 로그인 버튼을 중앙에 배치
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col2:
-            login_button = st.button("로그인")
-
-        if login_button:
-            if password == PASSWORD:
-                st.session_state.authenticated = True
-                st.success("로그인 성공!")
-                st.rerun()
-            else:
-                st.error("비밀번호가 올바르지 않습니다.")
-    
 def show_teacher_page():
     """선생님 페이지 메인"""
-    st.markdown("<h1 style='text-align: center;'>위원회 관리</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>위임장 관리</h1>", unsafe_allow_html=True)
     st.write("위원회를 추가하고 학부모용 링크를 생성할 수 있습니다.")
 
     # 로그아웃 버튼을 오른쪽 상단에 배치
@@ -122,7 +92,7 @@ def show_teacher_page():
     st.subheader("🔗 위원회 링크 생성")
     if os.path.exists(json_file):
         selected_form = st.selectbox("위원회 선택", list(form_configs.keys()))
-        base_url = st.text_input("앱 기본 URL", "https://parkkiyun-delegation-main-aymqew.streamlit.app/")
+        base_url = st.text_input("앱 기본 URL", "https://hanolapp-fngnwqhxmgvwcwj2dztiue.streamlit.app/write_delegation")
         
         # 생성된 링크를 세션 상태에 저장
         if "generated_link" not in st.session_state:
@@ -135,16 +105,32 @@ def show_teacher_page():
         # 저장된 링크가 있으면 표시
         if st.session_state.generated_link:
             st.write("생성된 링크:")
-            st.code(st.session_state.generated_link)
-            
-            # 링크를 텍스트로 표시하고 선택하기 쉽게 만듦
-            st.text_input("아래 링크를 선택하여 복사하세요:", 
+            # 링크를 텍스트 입력 필드로만 표시
+            st.text_input("링크를 선택하여 복사하세요:", 
                           value=st.session_state.generated_link,
                           key="link_input",
-                          disabled=True)
+                          label_visibility="collapsed")
+            
+            # QR 코드 생성 섹션
+            if st.checkbox("QR 코드 생성"):
+                try:
+                    import qrcode
+                    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+                    qr.add_data(st.session_state.generated_link)
+                    qr.make(fit=True)
+                    img = qr.make_image(fill_color="black", back_color="white")
+                    buffered = BytesIO()
+                    img.save(buffered, format="PNG")
+                    
+                    # QR 코드 이미지 표시
+                    st.write(f"**{selected_form} QR 코드**")
+                    st.image(buffered)
+                    
+                except ImportError:
+                    st.error("QR 코드 생성을 위해 'qrcode' 패키지를 설치해주세요.")
 
 # 메인 로직
 if st.session_state.authenticated:
     show_teacher_page()
 else:
-    show_login()
+    st.switch_page("Home.py")  # 로그인되지 않은 경우 홈페이지로 리다이렉트
