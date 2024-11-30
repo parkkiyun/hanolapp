@@ -1,12 +1,8 @@
 {
-    "teacher_only": [
-        "dashboard",
-        "delegation_login",
-        "absence"
-    ],
-    "guest_allowed": [
-        "write_delegation",
-        "field_trip_request",
-        "field_trip_report"
-    ]
+    "dashboard": ["teacher"],
+    "delegation_login": ["teacher"],
+    "absence": ["teacher"],
+    "field_trip_request": ["all"],
+    "field_trip_report": ["all"],
+    "write_delegation": ["all"]
 } 
