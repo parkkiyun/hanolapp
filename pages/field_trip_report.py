@@ -414,6 +414,26 @@ with tabs[4]:
 with tabs[5]:  # 5번째 탭 (0-index)
     st.header("사진 업로드")
     
+    # 깔끔한 설명 박스
+    st.markdown("""
+        <div style="
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <div style="color: #1f1f1f; font-size: 1.1em; margin-bottom: 8px;">
+                📸 체험학습 결과보고를 위한 사진을 첨부하세요
+            </div>
+            <div style="color: #666; font-size: 0.9em;">
+                사진은 최대 4장까지 업로드 할 수 있습니다
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     # 업로드된 이미지를 저장할 리스트 초기화
     if 'uploaded_photos' not in st.session_state:
         st.session_state.uploaded_photos = []
@@ -460,6 +480,26 @@ with tabs[5]:  # 5번째 탭 (0-index)
 # 결과보고서 확인 탭
 with tabs[6]:
     st.header("결과보고서 확인")
+    
+    # 깔끔한 설명 박스 추가
+    st.markdown("""
+        <div style="
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <div style="color: #1f1f1f; font-size: 1.1em; margin-bottom: 8px;">
+                📄 생성된 PDF파일을 다운로드 받아서 담임선생님께 제출하세요
+            </div>
+            <div style="color: #666; font-size: 0.9em;">
+                결과보고서를 확인하고 다운로드하세요
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     # 이미지 파일 경로 설정
     img_path = IMAGE_DIR / "studywork003.png"

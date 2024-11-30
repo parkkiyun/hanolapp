@@ -167,30 +167,21 @@ else:
     with tab2:
         st.write("### 🔗 교외체험학습 직접 접속 링크")
         
-        # 기본 URL 입력 (유지)
+        # 기본 URL 고정 (세션에만 저장하고 입력란은 표시하지 않음)
         if 'base_url' not in st.session_state:
             st.session_state.base_url = "https://hanolapp-fngnwqhxmgvwcwj2dztiue.streamlit.app"
         
-        base_url = st.text_input(
-            "기본 URL", 
-            value=st.session_state.base_url,
-            help="앱의 기본 URL을 입력하세요"
-        )
-        
-        if base_url != st.session_state.base_url:
-            st.session_state.base_url = base_url
-
-        # 링크 생성 및 표시 (disabled 제거)
+        # 링크 생성 및 표시 (입력란 없이 바로 생성)
         col1, col2 = st.columns(2)
         
         with col1:
             st.write("#### 교외체험학습 신청서")
-            request_link = f"{base_url}?page=field_trip_request"
+            request_link = f"{st.session_state.base_url}?page=field_trip_request"
             st.text_input("링크를 선택하여 복사하세요:", value=request_link, key="request_link_input", label_visibility="collapsed")
             
         with col2:
             st.write("#### 교외체험학습 결과보고서")
-            report_link = f"{base_url}?page=field_trip_report"
+            report_link = f"{st.session_state.base_url}?page=field_trip_report"
             st.text_input("링크를 선택하여 복사하세요:", value=report_link, key="report_link_input", label_visibility="collapsed")
         
         # QR 코드 생성 섹션 (기존 코드 유지)

@@ -419,7 +419,27 @@ with tabs[4]:
 # 신청서 확인 탭
 with tabs[5]:
     st.header("신청서 확인")
-
+    
+    # 깔끔한 설명 박스 추가
+    st.markdown("""
+        <div style="
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <div style="color: #1f1f1f; font-size: 1.1em; margin-bottom: 8px;">
+                📄 생성된 PDF파일을 다운로드 받아서 담임선생님께 제출하세요
+            </div>
+            <div style="color: #666; font-size: 0.9em;">
+                신청서를 확인하고 다운로드하세요
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     # 이미지 파일 경로 설정
     img_path = IMAGE_DIR / "studywork001.png"
     extra_img_path = IMAGE_DIR / "studywork002.png"  # 별지 이미지

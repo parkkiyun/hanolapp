@@ -21,14 +21,26 @@ if not st.session_state.get("authenticated", False):
 def show_teacher_page():
     """선생님 페이지 메인"""
     st.markdown("<h1 style='text-align: center;'>위임장 관리</h1>", unsafe_allow_html=True)
-    st.write("위원회를 추가하고 학부모용 링크를 생성할 수 있습니다.")
-
-    # 로그아웃 버튼을 오른쪽 상단에 배치
-    col1, col2 = st.columns([6, 1])
-    with col2:
-        if st.button("로그아웃"):
-            st.session_state.authenticated = False
-            st.rerun()
+    
+    # 깔끔한 설명 박스
+    st.markdown("""
+        <div style="
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <div style="color: #1f1f1f; font-size: 1.1em; margin-bottom: 8px;">
+                🔗 위원회를 추가하고 학부모용 링크를 생성할 수 있습니다
+            </div>
+            <div style="color: #666; font-size: 0.9em;">
+                생성된 링크를 학부모님께 공유하세요
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     # JSON 파일 경로
     json_file = "form_config.json"
@@ -91,25 +103,42 @@ def show_teacher_page():
     st.write("---")
     st.subheader("🔗 위원회 링크 생성")
     if os.path.exists(json_file):
-        selected_form = st.selectbox("위원회 선택", list(form_configs.keys()))
-        base_url = st.text_input("앱 기본 URL", "https://hanolapp-fngnwqhxmgvwcwj2dztiue.streamlit.app/write_delegation")
-        
-        # 생성된 링크를 세션 상태에 저장
+        # 세션 상태 초기화
         if "generated_link" not in st.session_state:
             st.session_state.generated_link = None
             
+        # 드롭다운 메뉴 선택 변경 시 링크 초기화
+        selected_form = st.selectbox(
+            "위원회 선택", 
+            list(form_configs.keys()), 
+            key="selected_form"
+        )
+        
+        # 기본 URL 고정
+        base_url = "https://hanolapp-fngnwqhxmgvwcwj2dztiue.streamlit.app/write_delegation"
+        
+        # 드롭다운 메뉴 변경 시 링크 초기화
+        if "last_selected_form" not in st.session_state:
+            st.session_state.last_selected_form = selected_form
+        
+        if st.session_state.last_selected_form != selected_form:
+            st.session_state.generated_link = None
+            st.session_state.last_selected_form = selected_form
+        
+        # 링크 생성 버튼
         if st.button("링크 생성"):
             if selected_form:
                 st.session_state.generated_link = f"{base_url}?form_type={selected_form}"
         
-        # 저장된 링크가 있으면 표시
-        if st.session_state.generated_link:
+        # 링크 생성 버튼을 눌렀을 때만 링크 표시
+        if st.session_state.generated_link is not None:
             st.write("생성된 링크:")
-            # 링크를 텍스트 입력 필드로만 표시
-            st.text_input("링크를 선택하여 복사하세요:", 
-                          value=st.session_state.generated_link,
-                          key="link_input",
-                          label_visibility="collapsed")
+            st.text_input(
+                "링크를 선택하여 복사하세요:", 
+                value=st.session_state.generated_link,
+                key="link_input",
+                label_visibility="collapsed"
+            )
             
             # QR 코드 생성 섹션
             if st.checkbox("QR 코드 생성"):
