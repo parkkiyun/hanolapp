@@ -1,40 +1,34 @@
-import streamlit as st
 import json
+import streamlit as st
 from pathlib import Path
 
 class AuthManager:
     def __init__(self):
-        self.config_path = Path("config/page_access.json")
-        self.load_access_config()
-    
-    def load_access_config(self):
-        with open(self.config_path, "r", encoding="utf-8") as f:
+        config_path = Path(__file__).parent.parent / "config" / "page_access.json"
+        with open(config_path, 'r', encoding='utf-8') as f:
             self.access_config = json.load(f)
-    
+
     def is_teacher_page(self, page_name):
-        page_mapping = {
-            "dashboard": "대시보드",
-            "delegation_login": "위임장로그인",
-            "write_delegation": "위임장작성",
-            "absence": "결석신고서"
-        }
-        korean_name = page_mapping.get(page_name, page_name)
-        return korean_name in self.access_config["teacher_only"]
-    
-    def is_guest_allowed_page(self, page_name):
-        page_mapping = {
-            "dashboard": "대시보드",
-            "delegation_login": "위임장로그인",
-            "write_delegation": "위임장작성",
-            "field_trip_request": "교외체험학습신청서",
-            "field_trip_report": "교외체험학습결과보고서"
-        }
-        korean_name = page_mapping.get(page_name, page_name)
-        return korean_name in self.access_config["guest_allowed"]
-    
+        """페이지가 교사 전용인지 확인"""
+        return self.access_config.get(page_name, []) == ["teacher"]
+
     def check_page_access(self, page_name):
-        if self.is_teacher_page(page_name) and not st.session_state.get("authenticated", False):
-            st.error("이 페이지는 교사 로그인이 필요합니다.")
-            st.switch_page("pages/dashboard.py")
-            st.stop()
+        """페이지 접근 권한 확인"""
+        if self.is_teacher_page(page_name):
+            if not st.session_state.get("authenticated", False):
+                st.error("이 페이지는 교사 로그인이 필요합니다.")
+                st.switch_page("Home.py")
+                st.stop()
+
+    def authenticate(self, username, password):
+        """사용자 인증"""
+        if username == "teacher" and password == "1234":
+            st.session_state["authenticated"] = True
+            return True
+        return False
+
+    def logout(self):
+        """로그아웃"""
+        st.session_state["authenticated"] = False
+        st.session_state["username"] = None
     
