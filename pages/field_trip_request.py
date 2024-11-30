@@ -191,9 +191,20 @@ with tabs[1]:
     # 교외체험학습 시작일과 종료일 입력란 나란히 배치
     col1, col2 = st.columns(2)
     with col1:
-        start_date = st.date_input('교외체험학습 시작일', min_value=date.today() + timedelta(days=1), key='start_date')
+        # min_value 제거하고 기본값만 설정
+        start_date = st.date_input(
+            '교외체험학습 시작일', 
+            value=date.today() + timedelta(days=1),
+            key='start_date'
+        )
     with col2:
-        end_date = st.date_input('교외체험학습 종료일', min_value=start_date + timedelta(days=1), key='end_date')
+        # min_value를 start_date로 설정
+        end_date = st.date_input(
+            '교외체험학습 종료일', 
+            value=start_date + timedelta(days=1),
+            min_value=start_date,
+            key='end_date'
+        )
 
     # 출석인정 시작일/종료일 설명 텍스트 추가
     st.markdown("""
@@ -206,9 +217,21 @@ with tabs[1]:
     # 출석인정 시작일과 종료일 입력란 나란히 배치
     col3, col4 = st.columns(2)
     with col3:
-        attendance_start_date = st.date_input('출석인정 시작일', min_value=date.today() + timedelta(days=1), key='attendance_start_date')
+        attendance_start_date = st.date_input(
+            '출석인정 시작일', 
+            value=start_date,
+            min_value=start_date,
+            max_value=end_date,
+            key='attendance_start_date'
+        )
     with col4:
-        attendance_end_date = st.date_input('출석인정 종료일', min_value=attendance_start_date + timedelta(days=1), key='attendance_end_date')
+        attendance_end_date = st.date_input(
+            '출석인정 종료일', 
+            value=attendance_start_date,
+            min_value=attendance_start_date,
+            max_value=end_date,
+            key='attendance_end_date'
+        )
 
     # 학습 형태 선택
     st.selectbox(

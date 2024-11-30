@@ -73,22 +73,23 @@ with col2:
                 align-items: center;
                 justify-content: center;
                 flex-wrap: nowrap;
-                gap: 10px;
+                gap: 5px;
                 margin: 0 auto;
-                max-width: 600px;
+                max-width: 300px;
             }
             .logo-container {
                 flex: 0 0 auto;
                 display: flex;
                 align-items: center;
+                margin-right: -5px;
             }
             .title-container {
-                flex: 1 1 auto;
-                text-align: center;
+                flex: 0 0 auto;
+                text-align: left;
             }
             @media (max-width: 640px) {
                 .header-container {
-                    gap: 5px;
+                    gap: 0px;
                 }
             }
         </style>
@@ -105,7 +106,7 @@ with col2:
                      style="object-fit: contain;">
             </div>
             <div class="title-container">
-                <h3 style="margin: 0;">온양한올고등학교</h3>
+                <h3 style="margin: 0; padding-left: 5px;">온양한올고등학교</h3>
             </div>
         </div>
         """,
