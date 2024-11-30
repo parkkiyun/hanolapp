@@ -1,0 +1,17 @@
+[browser]
+gatherUsageStats = false
+
+[server]
+enableXsrfProtection = false
+
+[theme]
+base = "light"
+primaryColor = "#FF4B4B"
+
+[ui]
+hideSidebarNav = true
+hideTopBar = true
+
+[client]
+showSidebarNavigation = false
+toolbarMode = "minimal" 

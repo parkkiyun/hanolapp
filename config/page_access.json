@@ -1,0 +1,12 @@
+{
+    "teacher_only": [
+        "dashboard",
+        "delegation_login",
+        "absence"
+    ],
+    "guest_allowed": [
+        "write_delegation",
+        "field_trip_request",
+        "field_trip_report"
+    ]
+} 
