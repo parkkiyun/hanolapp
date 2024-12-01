@@ -169,7 +169,7 @@ def render_signature_image(preview_only=False, form_config=None, return_image=Fa
 
         # preview_only가 True일 때만 미리보기 표시
         if preview_only:
-            st.image(image, caption="신청서 미리보기", use_container_width=True)
+            st.image(image, caption="신청서 미리보기", width=None)  # width=None은 원본 크기 유지
         
         if return_image:
             return image
