@@ -33,27 +33,50 @@ import base64
 from openpyxl import load_workbook
 import logging
 
-# 프로젝트 루트 경로 설정
-ROOT_DIR = Path(__file__).parent.parent.absolute()
+# 배포 환경에서의 경로 처리
+if os.getenv('STREAMLIT_SERVER_PATH'):  # Streamlit Cloud 환경인 경우
+    ROOT_DIR = Path('/mount/src/hanolapp')  # Streamlit Cloud의 기본 경로
+else:
+    ROOT_DIR = Path(__file__).parent.parent.absolute()  # 로컬 환경
 
 # 템플릿 디렉토리 경로 설정
-TEMPLATE_DIR = os.path.join(ROOT_DIR, "templates")
+TEMPLATE_DIR = ROOT_DIR / "templates"
+
+# 디버깅을 위한 경로 정보 출력
+st.write("현재 실행 경로:", os.getcwd())
+st.write("ROOT_DIR:", ROOT_DIR)
+st.write("TEMPLATE_DIR:", TEMPLATE_DIR)
 
 # 템플릿 파일 경로 설정
 TEMPLATE_FILES = {
-    "출석인정결석": os.path.join(TEMPLATE_DIR, "출석인정 결석계 템플릿.docx"),
-    "질병결석": os.path.join(TEMPLATE_DIR, "질병결석계 템플릿.docx"),
-    "기타결석": os.path.join(TEMPLATE_DIR, "기타결석계 템플릿.docx"),
+    "출석인정결석": TEMPLATE_DIR / "출석인정 결석계 템플릿.docx",
+    "질병결석": TEMPLATE_DIR / "질병결석계 템플릿.docx",
+    "기타결석": TEMPLATE_DIR / "기타결석계 템플릿.docx",
 }
+
+# 템플릿 디렉토리 존재 여부 확인
+if not TEMPLATE_DIR.exists():
+    st.error(f"템플릿 디렉토리를 찾을 수 없습니다: {TEMPLATE_DIR}")
+    # 디렉토리 생성 시도
+    try:
+        TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
+        st.info("템플릿 디렉토리를 생성했습니다.")
+    except Exception as e:
+        st.error(f"템플릿 디렉토리 생성 실패: {e}")
 
 # 템플릿 파일 존재 여부 확인
 for attendance_type, template_path in TEMPLATE_FILES.items():
-    if not os.path.exists(template_path):
+    if not template_path.exists():
         st.error(f"템플릿 파일을 찾을 수 없습니다: {template_path}")
-        logging.error(f"Template file not found: {template_path}")
+        # 파일 목록 출력
+        try:
+            files = list(TEMPLATE_DIR.glob('*'))
+            st.write(f"템플릿 디렉토리의 파일들: {files}")
+        except Exception as e:
+            st.error(f"파일 목록 조회 실패: {e}")
 
 # 로고 파일 경로 수정
-LOGO_PATH = os.path.join(ROOT_DIR, "images", "logo.png")
+LOGO_PATH = ROOT_DIR / "images" / "logo.png"
 
 # 로컬 이미지 파일을 Base64로 변환하는 함수
 def get_base64_image(image_path):
