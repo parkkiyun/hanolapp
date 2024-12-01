@@ -668,8 +668,8 @@ with tabs[5]:
                         
                         # 서명 추가 후 이미지 출력
                         add_signatures(image)
-                        st.image(image, caption='신청서', use_container_width=True)
-                        st.image(extra_image, caption='학습계획 상세내용', use_container_width=True)
+                        st.image(image, caption='신청서', width=800)  # width 파라미터 사용
+                        st.image(extra_image, caption='학습계획 상세내용', width=800)  # width 파라미터 사용
                     except FileNotFoundError:
                         st.error(f"별지 이미지를 찾을 수 없습니다: {extra_img_path}")
                         st.stop()
@@ -683,7 +683,7 @@ with tabs[5]:
 
                     # 서명 추가 후 이미지 출력
                     add_signatures(image)
-                    st.image(image, caption='교외체험학습 신청서', use_container_width=True)
+                    st.image(image, caption='교외체험학습 신청서', width=800)  # width 파라미터 사용
 
         except Exception as e:
             st.error(f"이미지 또는 폰트 로드 중 오류 발생: {e}")
