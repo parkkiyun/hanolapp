@@ -452,7 +452,7 @@ with tabs[5]:  # 5번째 탭 (0-index)
             
             with col1:
                 image = Image.open(uploaded_file)
-                st.image(image, caption=f"사진 {i+1}", use_container_width=True)
+                st.image(image, caption=f"사진 {i+1}", width=800)
             
             with col2:
                 # 삭제 버튼
@@ -720,7 +720,7 @@ with tabs[6]:
 
                 # 서명 추가 후 기본 신청서 이미지 출력
                 add_signatures(image)
-                st.image(image, caption='교외체험학습 신청서', use_container_width=True)
+                st.image(image, caption='교외체험학습 신청서', width=800)
 
                 # 별지 생성 및 사진 추가
                 try:
@@ -769,7 +769,7 @@ with tabs[6]:
                                     st.error(f"사진 {idx+1} 처리 중 오류 발생: {e}")
                 
                     # 별지 이미지 출력
-                    st.image(extra_image, caption='학습 활동 사진', use_container_width=True)
+                    st.image(extra_image, caption='학습 활동 사진', width=800)
                 except FileNotFoundError:
                     st.error(f"별지 이미지를 찾을 수 없습니다: {extra_img_path}")
                     st.stop()
