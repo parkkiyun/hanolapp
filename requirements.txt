@@ -9,3 +9,4 @@ openpyxl==3.1.2
 img2pdf==0.5.1
 holidays==0.25
 qrcode
+python-dateutil
