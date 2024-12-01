@@ -42,11 +42,6 @@ else:
 # 템플릿 디렉토리 경로 설정
 TEMPLATE_DIR = ROOT_DIR / "templates"
 
-# 디버깅을 위한 경로 정보 출력
-st.write("현재 실행 경로:", os.getcwd())
-st.write("ROOT_DIR:", ROOT_DIR)
-st.write("TEMPLATE_DIR:", TEMPLATE_DIR)
-
 # 템플릿 파일 경로 설정
 TEMPLATE_FILES = {
     "출석인정결석": TEMPLATE_DIR / "출석인정 결석계 템플릿.docx",
@@ -57,23 +52,12 @@ TEMPLATE_FILES = {
 # 템플릿 디렉토리 존재 여부 확인
 if not TEMPLATE_DIR.exists():
     st.error(f"템플릿 디렉토리를 찾을 수 없습니다: {TEMPLATE_DIR}")
-    # 디렉토리 생성 시도
-    try:
-        TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
-        st.info("템플릿 디렉토리를 생성했습니다.")
-    except Exception as e:
-        st.error(f"템플릿 디렉토리 생성 실패: {e}")
+    TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # 템플릿 파일 존재 여부 확인
 for attendance_type, template_path in TEMPLATE_FILES.items():
     if not template_path.exists():
         st.error(f"템플릿 파일을 찾을 수 없습니다: {template_path}")
-        # 파일 목록 출력
-        try:
-            files = list(TEMPLATE_DIR.glob('*'))
-            st.write(f"템플릿 디렉토리의 파일들: {files}")
-        except Exception as e:
-            st.error(f"파일 목록 조회 실패: {e}")
 
 # 로고 파일 경로 수정
 LOGO_PATH = ROOT_DIR / "images" / "logo.png"
