@@ -2,6 +2,7 @@ import streamlit as st
 from app.auth_manager import AuthManager
 from app.sidebar_manager import SidebarManager
 from pathlib import Path
+import os
 
 # 페이지 설정
 st.set_page_config(
@@ -27,23 +28,29 @@ import pandas as pd
 from datetime import datetime, timedelta
 from docx import Document
 from docx.shared import Pt
-import os
 import tempfile
 import base64
 from openpyxl import load_workbook
 import logging
 
-# 템로젝트 루트 경로 설정
-ROOT_DIR = Path(__file__).parent.parent
+# 프로젝트 루트 경로 설정
+ROOT_DIR = Path(__file__).parent.parent.absolute()
 
-# 템플릿 파일 경로 설정
+# 템플릿 디렉토리 경로 설정
 TEMPLATE_DIR = os.path.join(ROOT_DIR, "templates")
 
+# 템플릿 파일 경로 설정
 TEMPLATE_FILES = {
     "출석인정결석": os.path.join(TEMPLATE_DIR, "출석인정 결석계 템플릿.docx"),
     "질병결석": os.path.join(TEMPLATE_DIR, "질병결석계 템플릿.docx"),
     "기타결석": os.path.join(TEMPLATE_DIR, "기타결석계 템플릿.docx"),
 }
+
+# 템플릿 파일 존재 여부 확인
+for attendance_type, template_path in TEMPLATE_FILES.items():
+    if not os.path.exists(template_path):
+        st.error(f"템플릿 파일을 찾을 수 없습니다: {template_path}")
+        logging.error(f"Template file not found: {template_path}")
 
 # 로고 파일 경로 수정
 LOGO_PATH = os.path.join(ROOT_DIR, "images", "logo.png")
