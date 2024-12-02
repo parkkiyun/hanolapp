@@ -800,9 +800,9 @@ with tabs[6]:
 
                 # 생성된 PDF 파일 다운로드 버튼 추가
                 st.download_button(
-                    label="신청서 PDF 다운로드",
+                    label="결과보고서 PDF 다운로드",
                     data=pdf_bytes,
-                    file_name="교외체험학습_신청서.pdf",
+                    file_name="교외체험학습_결과보고서.pdf",
                     mime="application/pdf"
                 )
         except Exception as e:
