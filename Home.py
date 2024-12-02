@@ -4,10 +4,11 @@ import base64
 from io import BytesIO
 from app.sidebar_manager import SidebarManager
 from app.auth_manager import AuthManager
+import qrcode
 
 # 페이지 설정
 st.set_page_config(
-    page_title="한올고 위임장 시스템",
+    page_title="스마트 문서 시스템",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -31,7 +32,7 @@ sidebar = SidebarManager()
 sidebar.render_sidebar()
 
 # 로고 이미지 로드 및 크기 조정
-logo = Image.open("images/logo.png")
+logo = Image.open("images/sidebar_logo.png")
 logo_height = 40
 aspect_ratio = logo.size[0] / logo.size[1]
 logo_width = int(logo_height * aspect_ratio)
@@ -45,54 +46,31 @@ def image_to_base64(image):
 # 메인 타이틀과 헤더
 st.markdown("<h1 style='text-align: center;'>스마트 문서 시스템</h1>", unsafe_allow_html=True)
 
-# CSS로 반응형 레이아웃 구현
+# CSS로 로고만을 위한 간단한 레이아웃
 st.markdown("""
     <style>
         .header-container {
             display: flex;
-            align-items: center;
             justify-content: center;
-            flex-wrap: nowrap;
-            gap: 5px;
             margin: 0 auto;
             max-width: 300px;
-        }
-        .logo-container {
-            flex: 0 0 auto;
-            display: flex;
-            align-items: center;
-            margin-right: -5px;
-        }
-        .title-container {
-            flex: 0 0 auto;
-            text-align: left;
-        }
-        @media (max-width: 640px) {
-            .header-container {
-                gap: 0px;
-            }
         }
     </style>
 """, unsafe_allow_html=True)
 
-# 로고와 서브타이틀을 하나의 컨테이너에 배치
+# 로고만 표시
 st.markdown(
     f"""
     <div class="header-container">
-        <div class="logo-container">
-            <img src="data:image/png;base64,{image_to_base64(logo)}" 
-                 width="{logo_width}px" 
-                 height="{logo_height}px" 
-                 style="object-fit: contain;">
-        </div>
-        <div class="title-container">
-            <h3 style="margin: 0; padding-left: 5px;">온양한올고등학교</h3>
-        </div>
+        <img src="data:image/png;base64,{image_to_base64(logo)}" 
+             width="{logo_width}px" 
+             height="{logo_height}px" 
+             style="object-fit: contain;">
     </div>
     """,
     unsafe_allow_html=True
 )
-
+st.markdown("---")
 # 로그인 상태에 따른 화면 표시
 if not st.session_state.get("authenticated", False):
     # 로그인 폼
@@ -187,7 +165,6 @@ else:
         # QR 코드 생성 섹션 (기존 코드 유지)
         if st.checkbox("QR 코드 생성"):
             try:
-                import qrcode
                 col1, col2 = st.columns(2)
                 
                 with col1:
