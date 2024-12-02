@@ -3,6 +3,9 @@ from app.auth_manager import AuthManager
 from app.sidebar_manager import SidebarManager
 from pathlib import Path
 import os
+from openpyxl.utils import get_column_letter
+import openpyxl.cell.cell
+from app.absence_excel_processing import process_excel
 
 # 페이지 설정
 st.set_page_config(
@@ -128,7 +131,7 @@ with col3:
 with col4:
     confirmation_date = st.date_input("결석확인일", st.session_state['confirmation_date'], key="confirmation_date_input")
 
-if st.button("엑셀 파일 업로드하기", key="next_step_button"):
+if st.button("입력 완료", key="next_step_button"):
     st.session_state['confirmation_date_str'] = confirmation_date.strftime('%Y.%m.%d')
     st.session_state['grade'] = grade
     st.session_state['class_name'] = class_name
@@ -143,124 +146,30 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
 
     if uploaded_file is not None:
         try:
+            # 파일명 확인
+            st.write("### 처리 중인 파일명:", uploaded_file.name)
+            
             # 업로드된 파일을 임시 파일로 저장
             with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
                 temp_file.write(uploaded_file.getvalue())
                 temp_path = temp_file.name
 
-            # 병합된 셀을 처리하는 함수는 그대로 유지
-            def unmerge_excel_cells(file_path):
-                # 엑셀 파일 로드
-                wb = load_workbook(filename=file_path)
-                sheet = wb.active
-
-                # '사유' 열의 빈 칸을 '사유입력'으로 채우기
-                for row in sheet.iter_rows():
-                    for cell in row:
-                        if sheet.cell(row=cell.row, column=6).value is None or str(sheet.cell(row=cell.row, column=6).value).strip() == '':
-                            sheet.cell(row=cell.row, column=6).value = '사유입력'
-
-                # 병합된 셀의 값을 개별 셀로 복사
-                for merged_range in list(sheet.merged_cells.ranges):
-                    min_row, min_col, max_row, max_col = merged_range.bounds
-                    merged_value = sheet.cell(min_row, min_col).value
-                    for row in range(min_row, max_row + 1):
-                        for col in range(min_col, max_col + 1):
-                            sheet.cell(row, col).value = merged_value
-                    # 병합 해제
-                    sheet.unmerge_cells(str(merged_range))
-
-                # '번호'와 '성명' 열의 빈 셀 채우기
-                max_row = sheet.max_row
-                for row in range(2, max_row + 1):  # 첫 번째 행은 헤더이므로 제외
-                    if sheet.cell(row=row, column=2).value is None:  # '번호' 열 (column=2)
-                        sheet.cell(row=row, column=2).value = sheet.cell(row=row - 1, column=2).value
-                    if sheet.cell(row=row, column=3).value is None:  # '성명' 열 (column=3)
-                        sheet.cell(row=row, column=3).value = sheet.cell(row=row - 1, column=3).value
-
-                # 처리된 데이터를 새로운 임시 파일에 저장
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as output_file:
-                    wb.save(output_file.name)
-                    return output_file.name
-
-            # 병합된 셀 분리 처리
-            unmerged_file = unmerge_excel_cells(temp_path)
-
-            # Pandas로 데이터 불러오기
-            data = pd.read_excel(unmerged_file, sheet_name=0, dtype={'번호': str})
+            # 새로운 process_excel 함수 사용
+            data = process_excel(temp_path)
             
-            # 임시 파일들 삭제
+            # 임시 파일 삭제
             try:
                 os.unlink(temp_path)
-                os.unlink(unmerged_file)
             except Exception as e:
                 logging.warning(f"임시 파일 삭제 중 오류가 발생했습니다: {e}")
 
-            data.columns = data.columns.str.strip()
-            expected_columns = ['일자', '번호', '성명', '출결구분', '결시교시', '사유']
-            missing_columns = [col for col in expected_columns if col not in data.columns]
-            if missing_columns:
-                st.error(f"엑셀 파일에 필요한 열이 없습니다: {', '.join(missing_columns)}")
-                st.write("엑셀 열 이름 확인: ", data.columns.tolist())
+            # 결석확인일 추가
+            data['결석확인일'] = st.session_state.get('confirmation_date_str', '')
+
+            # 데이터 검증 및 표시
+            if data.empty:
+                st.error("처리할 데이터가 없습니다.")
             else:
-                data['일자'] = pd.to_datetime(data['일자'], format="%Y.%m.%d.", errors='coerce')
-                valid_attendance_types = ['출석인정결석', '질병결석', '기타결석']
-                data = data[data['출결구분'].isin(valid_attendance_types)]
-                data = data.drop(columns=['결시교시'], errors='ignore')
-                data['결석확인일'] = st.session_state.get('confirmation_date_str', '')
-                data = data.dropna(subset=['일자'])
-                data['일자'] = data['일자'].dt.strftime('%Y.%m.%d')
-
-                processed_data = []
-
-                def calculate_absence_groups(df):
-                    absence_groups = []
-                    group_start = None
-                    group_end = None
-                    current_reason = None
-
-                    for i in range(len(df)):
-                        current_date = pd.to_datetime(df.iloc[i]['일자'], format='%Y.%m.%d')
-                        reason = df.iloc[i]['사유']
-
-                        if group_start is None:
-                            group_start = current_date
-                            group_end = current_date
-                            current_reason = reason
-                        elif (current_date - group_end == timedelta(days=1)) and (reason == current_reason):
-                            group_end = current_date
-                        else:
-                            absence_groups.append((group_start, group_end))
-                            group_start = current_date
-                            group_end = current_date
-                            current_reason = reason
-
-                    # 마지막 그룹 추가
-                    if group_start is not None:
-                        absence_groups.append((group_start, group_end))
-
-                    return absence_groups
-
-                # 출결구분의 정확성을 확인하고 올바른 데이터를 추출하도록 수정
-                corrected_data = []
-                for (name, attendance_type, reason), group in data.groupby(['성명', '출결구분', '사유']):
-                    group = group.sort_values(by='일자').reset_index(drop=True)
-                    absence_ranges = calculate_absence_groups(group)
-                    for start, end in absence_ranges:
-                        absence_days = (end - start).days + 1
-                        row = group.iloc[0].copy()
-                        row['결석시작일'] = start.strftime('%Y.%m.%d')
-                        row['결석종료일'] = end.strftime('%Y.%m.%d')
-                        row['결석일수'] = absence_days
-                        corrected_data.append(row)
-
-                data = pd.DataFrame(corrected_data)
-                data = data[['번호', '성명', '출결구분', '사유', '결석시작일', '결석종료일', '결석일수', '결석확인일']]
-                data['번호'] = pd.to_numeric(data['번호'], errors='coerce')
-                data = data.sort_values(by=['번호']).reset_index(drop=True)
-
-                # '사유' 열은 ffill()로 채우지 않고 빈 값을 그대로 유지
-
                 st.session_state['processed_data'] = data
                 data = st.data_editor(data, key='data_editor', use_container_width=True)
                 st.session_state['processed_data'] = data
@@ -270,6 +179,7 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
                     st.button("이전 단계로 이동", on_click=lambda: st.session_state.update({'step': 1}))
                 with col2:
                     st.button("DOCX 생성 및 다운로드하기", on_click=lambda: st.session_state.update({'step': 3}))
+
         except Exception as e:
             st.error(f"엑셀 데이터 처리 중 오류가 발생했습니다: {e}")
             logging.error(f"Excel processing error: {str(e)}")
