@@ -43,7 +43,7 @@ def render():
     render_signature_image(preview_only=True, form_config=form_config, return_image=False)
     
     # PDF 생성 및 다운로드
-    if st.button("신청서 PDF로 변환 및 다운로드"):
+    if st.button("위임장 PDF로 변환 및 다운로드"):
         with st.spinner("PDF 변환 중..."):
             pdf_generated = generate_pdf(form_config=form_config)
             if pdf_generated:
