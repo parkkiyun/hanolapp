@@ -241,67 +241,185 @@ with tabs[1]:
 
 # 탭 3: 학습 계획 입력 (폼 기반 동적 추가)
 with tabs[2]:
-    st.header("교외체험 학습 결과 내용 입력")
+    st.header("교외체험 학습 계획 입력")
     
     # 설명 텍스트 추가
-    st.markdown('<p style="color: red; font-size: small;">일정 추가 버튼을 눌러서 시간/장소/활동내용을 구체적으로 작성하세요</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: red; font-size: small;">일정을 입력하고 추가 버튼을 눌러 계획을 작성하세요</p>', unsafe_allow_html=True)
 
-    # 교외체험학습 날짜 계산
     start_date = st.session_state.get('start_date')
     end_date = st.session_state.get('end_date')
 
     if start_date and end_date:
-        total_days = (end_date - start_date).days + 1
+        # 날짜 목록 생성
+        date_list = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = f"{(current_date - start_date).days + 1}일차 ({current_date.strftime('%m/%d')})"
+            date_list.append(date_str)
+            current_date += timedelta(days=1)
 
-        # 일차별 데이터 저장 초기화 및 동기화
-        if 'plans' not in st.session_state or not isinstance(st.session_state.plans, dict):
-            st.session_state.plans = {f"{day}일차": [] for day in range(1, total_days + 1)}
-        else:
-            # 기존의 plans에서 누락된 일차 데이터 초기화
-            for day in range(1, total_days + 1):
-                day_key = f"{day}일차"
+        # plans 초기화
+        if 'plans' not in st.session_state:
+            st.session_state.plans = {}
+
+        # 입력 폼 컨테이너
+        with st.container():
+            # 날짜 선택 드롭다운
+            selected_date = st.selectbox(
+                "날짜 선택",
+                date_list,
+                key="selected_date"
+            )
+            
+            # 시간 선택 위젯
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                # 시간 옵션 생성 (30분 간격)
+                time_options = []
+                for hour in range(24):
+                    for minute in [0, 30]:
+                        time_str = f"{hour:02d}:{minute:02d}"
+                        time_options.append(time_str)
+
+                # 기본값을 9:00로 설정
+                default_index = time_options.index("09:00")
+                
+                selected_time = st.selectbox(
+                    "시간",
+                    options=time_options,
+                    index=default_index,
+                    key="input_time"
+                )
+
+            with col2:
+                location = st.text_input("장소", key="input_location")
+            with col3:
+                activity = st.text_input("활동내용", key="input_activity")
+
+            # 일정 추가 버튼
+            if st.button("일정 추가"):
+                day_key = selected_date.split()[0]  # "1일차" 형식으로 추출
+                
                 if day_key not in st.session_state.plans:
                     st.session_state.plans[day_key] = []
+                
+                new_plan = {
+                    "시간": selected_time,  # 선택된 시간을 직접 사용
+                    "장소": location,
+                    "활동내용": activity
+                }
+                
+                st.session_state.plans[day_key].append(new_plan)
+                st.success(f"{selected_date}에 일정이 추가되었습니다.")
 
-        # 일차별 입력 폼
-        for day in range(1, total_days + 1):
-            plan_date = (start_date + timedelta(days=day - 1)).strftime("%m/%d")  # 날짜 계산 및 포맷
-            st.subheader(f"{day}일차 계획({plan_date})")
-            st.markdown("**시간 / 장소 / 활동내용**")
+        # 현재 일정 표시
+        st.markdown("### 현재 일정")
+        
+        if st.session_state.plans:
+            # 데이터프레임용 데이터 준비
+            df_data = []
+            for day_key, plans in sorted(st.session_state.plans.items()):
+                day_num = int(''.join(filter(str.isdigit, day_key)))
+                current_date = start_date + timedelta(days=day_num - 1)
+                date_str = current_date.strftime("%m/%d")
+                
+                for plan in sorted(plans, key=lambda x: x['시간']):
+                    df_data.append({
+                        "일차": f"{day_key} ({date_str})",
+                        "시간": plan['시간'],
+                        "장소": plan['장소'],
+                        "활동내용": plan['활동내용']
+                    })
+            
+            if df_data:
+                df = pd.DataFrame(df_data)
+                
+                # 데이터프레임 표시와 삭제 UI를 완전히 분리
+                if df_data:
+                    # 1. 데이터프레임 표시 섹션
+                    if len(df) > 15:
+                        df1 = df.iloc[:15]
+                        df2 = df.iloc[15:]
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.dataframe(
+                                df1,
+                                hide_index=True,
+                                column_config={
+                                    "일차": st.column_config.TextColumn("일차", width="medium"),
+                                    "시간": st.column_config.TextColumn("시간", width="small"),
+                                    "장소": st.column_config.TextColumn("장소", width="medium"),
+                                    "활동내용": st.column_config.TextColumn("활동내용", width="large"),
+                                }
+                            )
+                        with col2:
+                            st.dataframe(
+                                df2,
+                                hide_index=True,
+                                column_config={
+                                    "일차": st.column_config.TextColumn("일차", width="medium"),
+                                    "시간": st.column_config.TextColumn("시간", width="small"),
+                                    "장소": st.column_config.TextColumn("장소", width="medium"),
+                                    "활동내용": st.column_config.TextColumn("활동내용", width="large"),
+                                }
+                            )
+                    else:
+                        st.dataframe(
+                            df,
+                            hide_index=True,
+                            column_config={
+                                "일차": st.column_config.TextColumn("일차", width="medium"),
+                                "시간": st.column_config.TextColumn("시간", width="small"),
+                                "장소": st.column_config.TextColumn("장소", width="medium"),
+                                "활동내용": st.column_config.TextColumn("활동내용", width="large"),
+                            }
+                        )
 
-            # 기본 입력란 보장
-            if not st.session_state.plans[f"{day}일차"]:
-                st.session_state.plans[f"{day}일차"].append({"시간": "", "장소": "", "활동내용": ""})
+                    # 2. 삭제 UI 섹션 (별도의 컨테이너로 분리)
+                    with st.container():
+                        st.markdown("---")  # 구분선
+                        st.markdown("### 일정 삭제")
+                        
+                        # 삭제할 일정 선택
+                        delete_options = [f"{plan['일차']} - {plan['시간']} - {plan['장소']} - {plan['활동내용']}" for plan in df_data]
+                        selected_plan_to_delete = st.selectbox(
+                            "삭제할 일정을 선택하세요",
+                            delete_options,
+                            key="selected_plan_to_delete"
+                        )
 
-            # 각 일차별 기존 데이터 표시 및 추가 기능
-            plans_for_day = st.session_state.plans[f"{day}일차"]
-            for idx, plan in enumerate(plans_for_day):
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    plan['시간'] = st.text_input(f"{day}일차 시간 {idx+1}", value=plan.get('시간', ""), key=f"time_{day}_{idx}")
-                with col2:
-                    plan['장소'] = st.text_input(f"{day}일차 장소 {idx+1}", value=plan.get('장소', ""), key=f"place_{day}_{idx}")
-                with col3:
-                    plan['활동내용'] = st.text_input(f"{day}일차 활동내용 {idx+1}", value=plan.get('활동내용', ""), key=f"activity_{day}_{idx}")
+                        # 삭제 버튼 및 로직
+                        if st.button("선택한 일정 삭제", key="delete_plan_button"):
+                            day_info = selected_plan_to_delete.split(" - ")[0]
+                            time_info = selected_plan_to_delete.split(" - ")[1]
+                            day_key = day_info.split(" ")[0]
+                            
+                            if day_key in st.session_state.plans:
+                                st.session_state.plans[day_key] = [
+                                    plan for plan in st.session_state.plans[day_key]
+                                    if plan['시간'] != time_info
+                                ]
+                                
+                                if not st.session_state.plans[day_key]:
+                                    del st.session_state.plans[day_key]
+                                
+                                st.success("선택한 일정이 삭제되었습니다.")
+                                st.rerun()
+                else:
+                    st.info("등록된 일정이 없습니다.")
 
-            # 새로 일정 추가 버튼
-            if st.button(f"{day}일차 일정 추가", key=f"add_{day}"):
-                st.session_state.plans[f"{day}일차"].append({"시간": "", "장소": "", "활동내용": ""})
-                st.rerun()  # 버 클릭  즉시 리렌더링
-
-        # 전체 저장 버튼
-        if st.button("모든 일정 저장"):
-            st.success("모든 학습 내용이 저장되었습니다.")
-            # st.write(st.session_state.plans)  # 데이터 출력 제거
+            else:
+                st.warning("교외체험학습 시작일과 종료일을 설정해주세요.")
 
     else:
-        st.warning("교외체험학습 시작일과 종료일을 정해주세요.")
+        st.warning("교외체험학습 시작일과 종료일을 설정해주세요.")
 
 # 보호자 정보 입력 탭
 with tabs[3]:
     st.header("보호자 정보 입력")
 
-    # 보호자 정보 행
+    # 보호자 정보 
     col1, col2, col3 = st.columns(3)
     with col1:
         guardian_name = st.text_input('보호자명', key='guardian_name')
@@ -626,7 +744,7 @@ with tabs[6]:
             elif learning_type == "기타":
                 draw.text((2620, 945), "0", fill="black", font=font)
             else:
-                draw.text((300, 460), "학습 형태를 선택하세요", fill="red", font=font)
+                draw.text((300, 460), "학습 태를 선택하세요", fill="red", font=font)
 
             draw.text((580, 1050), st.session_state.get("purpose", ""), fill="black", font=font)
             draw.text((580, 1200), st.session_state.get("destination", ""), fill="black", font=font)
@@ -653,70 +771,140 @@ with tabs[6]:
                     guardian_signature_img = guardian_signature_img.resize(new_size, Image.Resampling.LANCZOS)
                     image.paste(guardian_signature_img, (2400, 3600), guardian_signature_img)
 
-            # 학습 계획 데이터 처리를 위한 변수 초기화
-            x_start, y_start = 400, 1770  # 첫 번째 칸 시작 치
-            max_y = 3200
+            # 학습 계획 데이터 처리를 한 변수 초기화
+            x_start, y_start = 180, 1800  # 첫 번째 칸 시작 위치
+            max_y = 3150
             font_size = 50
             min_font_size = 30
             extra_needed = False
-            first_section_plans = ""  # 첫 번 칸 계획
-            second_section_plans = ""  # 두 번째 칸 계획
-            remaining_plans = ""  # 남은 계획 (폰트 축소 후에도 넘치는 경우)
-
-            def get_text_height(text, font):
-                """텍스트의 높이를 계산하 헬퍼 함수"""
-                bbox = font.getbbox(text)
-                return bbox[3] - bbox[1]
+            first_section_plans = []  # 첫 번째 칸 계획
+            second_section_plans = []  # 두 번째 칸 계획
+            remaining_plans = []  # 남은 계획 (별지용)
 
             if 'plans' in st.session_state and isinstance(st.session_state.plans, dict):
                 # 전체 계획 텍스트 생성
-                full_plans = ""
                 start_date = st.session_state.start_date
                 sorted_days = sorted(
-                    [(day_key, (start_date + timedelta(days=int(''.join(filter(str.isdigit, day_key))) - 1))) for day_key in st.session_state.plans.keys()],
+                    [(day_key, (start_date + timedelta(days=int(''.join(filter(str.isdigit, day_key))) - 1))) 
+                     for day_key in st.session_state.plans.keys()],
                     key=lambda x: x[1]
-                ) 
+                )
 
-                # 첫 번째 칸과 두 번째 칸에 나눠 담기 위한 높이 계산
-                current_y = y_start
-                first_section = []
-                second_section = []
-                second_section_y = y_start
+                # 전체 계획을 두 섹션으로 나누기
+                first_section_plans = []
+                second_section_plans = []
+                total_plans = []
 
+                # 모든 계획을 시간순으로 정렬하여 total_plans에 추가
                 for day_key, date in sorted_days:
                     plans = st.session_state.plans.get(day_key, [])
-                    day_plans = f"{day_key} 계획 ({date.strftime('%m/%d')}):\n"
-                    for plan in plans:
-                        day_plans += f"{plan.get('시간', '')} | {plan.get('장소', '')} | {plan.get('활동내용', '')}\n"
+                    for i, plan in enumerate(plans):
+                        plan_data = {
+                            'day': day_key if i == 0 else '',  # 각 일차 첫 번째 항에만 일차 표시
+                            'time': plan.get('시간', ''),
+                            'location': plan.get('장소', ''),
+                            'activity': plan.get('활동내용', '')
+                        }
+                        total_plans.append(plan_data)
+
+                # 전체 계획을 두 섹션으로 나누기
+                half_length = len(total_plans) // 2
+                if len(total_plans) % 2 != 0:
+                    half_length += 1  # 홀수인 경우 첫 번째 섹션에 하나 더 할당
+
+                first_section_plans = total_plans[:half_length]
+                second_section_plans = total_plans[half_length:]
+
+                # 열 시작 위치와 줄 간격 설정
+                # 첫 번째 섹션 (왼쪽 칸) 좌표
+                x_time_first = 800    # 시간 시작 위치
+                x_location_first = 1000
+                x_activity_first = 1300
+
+                # 두 번째 섹션 (오른쪽 칸) 좌표
+                x_time_second = 1800   # 시간 시작 위치
+                x_location_second = 2000
+                x_activity_second = 2300
+
+                line_height = 70
+                current_y = y_start
+
+                # 첫 번째 섹션 그리기 (왼쪽 칸)
+                current_y = y_start
+                current_day = None
+                x_start_first = 580  # 왼쪽 ���션의 시작 X좌표
+                x_start_second = 1600  # 오른쪽 칸의 시작 X좌표
+
+                for plan in first_section_plans:
+                    if current_y >= max_y:
+                        # 오른쪽 칸으로 이동
+                        current_y = y_start
+                        x_start_first = x_start_second
+                        continue
+
+                    if plan['day'] and plan['day'] != current_day:  # 새로운 일차 시작
+                        if current_y != y_start:  # 첫 번째 일차가 아닌 경우 추가 간격
+                            current_y += line_height
+                        current_day = plan['day']
+                        draw.text((x_start_first, current_y), current_day, fill="black", font=font)  # 일차를 표시
+                        current_y += line_height  # 일차 표시 후 다음 줄로
                     
-                    # 현재 계획을 추가했을 때 y축 위치 계산
-                    test_font = ImageFont.truetype(font_path, size=font_size)
-                    line_height = get_text_height("test", test_font) + 5  # 줄 간격 포함
-                    plan_height = len(day_plans.split('\n')) * line_height
-                    
-                    # 첫 번째 칸에 들어갈 수 있는지 확인
-                    if current_y + plan_height <= max_y:
-                        first_section.append(day_plans)
-                        current_y += plan_height
-                    # 두 번째 칸에 들어갈 수 있는지 확인
-                    elif second_section_y + plan_height <= max_y:
-                        second_section.append(day_plans)
-                        second_section_y += plan_height
-                    else:
-                        # 두 번째 칸도 다 찼을 경우
+                    # 시간/장소/활동내용을 일차와 같은 X좌표에서 시작
+                    draw.text((x_start_first, current_y), plan['time'], fill="black", font=font)
+                    draw.text((x_start_first + 220, current_y), plan['location'], fill="black", font=font)
+                    draw.text((x_start_first + 440, current_y), plan['activity'], fill="black", font=font)
+                    current_y += line_height
+
+                # 두 번째 섹션 그리기 (오른쪽 칸)
+                current_y = y_start
+                current_day = None
+                x_start_second = 1600  # 오른쪽 섹션의 시작 X좌표
+
+                for plan in second_section_plans:
+                    if current_y >= max_y:  # max_y를 초과하면 별지로 이동
+                        remaining_plans.append(plan)
                         extra_needed = True
-                        remaining_plans += day_plans
+                        continue
 
-                # 첫 번째 칸과 두 번째 칸의 텍스트 생성
-                first_section_plans = "".join(first_section)
-                second_section_plans = "".join(second_section)
+                    if plan['day'] and plan['day'] != current_day:  # 새로운 일차 시작
+                        if current_y != y_start:  # 첫 번째 일차가 아닌 경우 추가 간격
+                            current_y += line_height
+                        current_day = plan['day']
+                        draw.text((x_start_second, current_y), current_day, fill="black", font=font)  # 일차를 표시
+                        current_y += line_height  # 일차 표시 후 다음 줄로
+                    
+                    # 시간/장소/활동내용을 일차와 같은 X좌표에서 시작
+                    draw.text((x_start_second, current_y), plan['time'], fill="black", font=font)
+                    draw.text((x_start_second + 220, current_y), plan['location'], fill="black", font=font)
+                    draw.text((x_start_second + 440, current_y), plan['activity'], fill="black", font=font)
+                    current_y += line_height
 
-                # 계획 텍스트 그리기
-                draw.text((400, 1770), first_section_plans, fill="black", 
-                        font=ImageFont.truetype(font_path, size=font_size))
-                if second_section_plans:
-                    draw.text((1700, 1770), second_section_plans, fill="black", 
-                            font=ImageFont.truetype(font_path, size=font_size))
+                # 별지 필요한 경우 별지 이미지 생성
+                if extra_needed and remaining_plans:
+                    extra_image = Image.open(extra_img_path).convert("RGBA")
+                    extra_draw = ImageDraw.Draw(extra_image)
+                    
+                    # 별지 시작 위치 조정
+                    current_y = 700  # 별지 제목 아래부터 시작
+                    
+                    # 별지에는 왼쪽부터 순차적으로 작성
+                    x_day = 580
+                    x_time = 800
+                    x_location = 1000
+                    x_activity = 1200
+                    
+                    # 남은 계획 모두 별지에 작성
+                    for plan in remaining_plans:
+                        extra_draw.text((x_day, current_y), plan['day'], fill="black", font=font)
+                        extra_draw.text((x_time, current_y), plan['time'], fill="black", font=font)
+                        extra_draw.text((x_location, current_y), plan['location'], fill="black", font=font)
+                        extra_draw.text((x_activity, current_y), plan['activity'], fill="black", font=font)
+                        current_y += line_height
+                        
+                        # 별지의 끝부분에 도달하면 멈춤
+                        if current_y >= 3000:  # 별지의 최대 높이 제한
+                            st.warning("계획이 너무 많아 일부가 별지에 포함되지 않았습니다.")
+                            break
 
                 # 서명 추가 후 기본 신청서 이미지 출력
                 add_signatures(image)
@@ -788,7 +976,7 @@ with tabs[6]:
                 main_image_path = temp_dir_path / "studywork_main.png"
                 extra_image_path = temp_dir_path / "studywork_extra.png"
 
-                # 이미지 파일 저장
+                # 이미지 파일 ���장
                 image.save(main_image_path)
                 extra_image.save(extra_image_path)  # 항상 별지 저장
 
