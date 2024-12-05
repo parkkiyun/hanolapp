@@ -6,38 +6,66 @@ def process_excel(file_path):
     df = pd.read_excel(
         file_path, 
         sheet_name=0, 
-        header=0  # 첫 번째 행을 헤더로 설정
+        header=0
     )
+
+    print("1. 원본 데이터의 출결구분 값들:", df['출결구분'].unique())
 
     # Step 1: Unmerge B, C columns (columns '번호', '성명')
     df[['번호', '성명']] = df[['번호', '성명']].ffill()
 
-    # Step 2: Filter valid data rows
+    # Step 2: 출결구분 데이터 전처리 및 필터링
+    df['출결구분'] = df['출결구분'].astype(str).apply(
+        lambda x: '질병결석' if ('질병' in x and '결석' in x) else x.strip()
+    )
+    
+    print("2. 전처리 후 출결구분 값들:", df['출결구분'].unique())
+    
+    # Step 3: Filter valid data rows
     valid_types = ['출석인정결석', '질병결석', '기타결석']
     filtered_data = df[df['출결구분'].isin(valid_types)].copy()
+    
+    print("3. 필터링 후 출결구분 값들:", filtered_data['출결구분'].unique())
+    print("4. 필터링 후 데이터 건수:", len(filtered_data))
 
-    # Step 3: Convert '일자' column to datetime format
+    if filtered_data.empty:
+        print("경고: 필터링 후 데이터가 비어있습니다!")
+        return pd.DataFrame(columns=['번호', '성명', '일자', '출결구분', '사유', '결석시작일', '결석종료일', '결석일수'])
+
+    # Step 4: Convert '일자' column to datetime format
     filtered_data['일자'] = pd.to_datetime(
-        filtered_data['일자'].str.strip('.'),  # Trailing '.' 제거
-        format='%Y.%m.%d',  # 예상되는 날짜 형식
-        errors='coerce'  # 변환 실패 시 NaT로 처리
+        filtered_data['일자'].str.strip('.'),
+        format='%Y.%m.%d',
+        errors='coerce'
     )
+    
+    print("5. 날짜 변환 후 데이터 건수:", len(filtered_data))
 
-    # Step 4: Add new columns
+    # Step 5: Add new columns
     filtered_data['결석시작일'] = None
     filtered_data['결석종료일'] = None
-    filtered_data['결석일수'] = None  # 새로운 열 추가
+    filtered_data['결석일수'] = None
 
-    # Step 5: Group by '출결구분', '사유', and '번호' and find continuous dates
-    group_columns = ['번호', '출결구분', '사유']
+    # Step 6: Group by columns and process
+    group_columns = ['번호', '출결구분']  # '사유' 컬럼 제외
     merged_rows = []
 
-    for _, group_data in filtered_data.groupby(group_columns):
-        # 날짜로 정렬
+    # 그룹화 전 데이터 확인
+    print("\n질병결석 데이터 확인:")
+    sick_data = filtered_data[filtered_data['출결구분'] == '질병결석']
+    print(sick_data[['번호', '출결구분', '사유', '일자']].to_string())
+    
+    for name, group_data in filtered_data.groupby(group_columns):
+        print(f"\n6. 처리 중인 그룹: {name}")
+        print(f"   - 출결구분: {name[1]}")
+        print(f"   - 데이터 건수: {len(group_data)}")
+        print(f"   - 날짜 데이터: {group_data['일자'].tolist()}")
+        
         group_data = group_data.sort_values('일자')
         dates = group_data['일자'].dropna().tolist()
         
-        if not dates:  # 유효한 날짜가 없는 경우 스킵
+        if not dates:
+            print(f"   - 그룹 {name}에 유효한 날짜가 없습니다")
             continue
             
         # 연속된 날짜 그룹 찾기
@@ -45,35 +73,32 @@ def process_excel(file_path):
         current_group.append(dates[0])
         
         for i in range(1, len(dates)):
-            # 이전 날짜와 현재 날짜의 차이가 1일인 경우
             if (dates[i] - dates[i-1]).days == 1:
                 current_group.append(dates[i])
             else:
                 # 현재 그룹 처리
-                if len(current_group) >= 1:  # 1일 이상인 경우도 포함
+                if current_group:
                     start_date = current_group[0]
                     end_date = current_group[-1]
                     
-                    # 해당 기간의 첫 번째 행 데이터 가져오기
                     base_row = group_data[group_data['일자'] == start_date].iloc[0].copy()
-                    
-                    # 날짜 정보 업데이트
                     base_row['결석시작일'] = start_date.strftime('%Y.%m.%d')
                     base_row['결석종료일'] = end_date.strftime('%Y.%m.%d')
                     
-                    # 결석일수 계산 (종료일 - 시작일 + 1)
                     days_diff = (end_date - start_date).days + 1
                     base_row['결석일수'] = days_diff
                     
-                    # 일자 열에 기간 표시
                     if start_date != end_date:
                         base_row['일자'] = f"{start_date.strftime('%Y.%m.%d')} ~ {end_date.strftime('%Y.%m.%d')}"
                     else:
                         base_row['일자'] = start_date.strftime('%Y.%m.%d')
                     
+                    # NaN 사유를 '사유입력'으로 대체
+                    if pd.isna(base_row['사유']):
+                        base_row['사유'] = '사유입력'
+                    
                     merged_rows.append(base_row)
                 
-                # 새로운 그룹 시작
                 current_group = [dates[i]]
         
         # 마지막 그룹 처리
@@ -85,7 +110,6 @@ def process_excel(file_path):
             base_row['결석시작일'] = start_date.strftime('%Y.%m.%d')
             base_row['결석종료일'] = end_date.strftime('%Y.%m.%d')
             
-            # 결석일수 계산
             days_diff = (end_date - start_date).days + 1
             base_row['결석일수'] = days_diff
             
@@ -94,15 +118,20 @@ def process_excel(file_path):
             else:
                 base_row['일자'] = start_date.strftime('%Y.%m.%d')
             
+            # NaN 사유를 '사유입력'으로 대체
+            if pd.isna(base_row['사유']):
+                base_row['사유'] = '사유입력'
+            
             merged_rows.append(base_row)
 
-    # Create final DataFrame from merged rows
+    # Create final DataFrame
+    columns_order = ['번호', '성명', '일자', '출결구분', '사유', '결석시작일', '결석종료일', '결석일수']
     if merged_rows:
         processed_data = pd.DataFrame(merged_rows)
-        # Reorder columns if needed
-        columns_order = ['번호', '성명', '일자', '출결구분', '사유', '결석시작일', '결석종료일', '결석일수']
         processed_data = processed_data[columns_order]
+        print("7. 최종 처리된 데이터 건수:", len(processed_data))
     else:
+        print("7. 처리된 데이터가 없습니다")
         processed_data = pd.DataFrame(columns=columns_order)
 
     return processed_data

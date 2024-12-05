@@ -194,7 +194,11 @@ if 'step' in st.session_state and st.session_state['step'] == 3:
         st.write("처리된 데이터에 기반하여 DOCX 파일을 생성합니다.")
 
         for attendance_type, template_file_name in TEMPLATE_FILES.items():
-            filtered_data = processed_data[processed_data['출결구분'] == attendance_type]
+            # 질병결석 케이스를 위한 특별 처리
+            if attendance_type == '질병결석':
+                filtered_data = processed_data[processed_data['출결구분'].str.contains('질병.*결석', regex=True)]
+            else:
+                filtered_data = processed_data[processed_data['출결구분'] == attendance_type]
 
             if filtered_data.empty:
                 continue
