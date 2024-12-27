@@ -315,7 +315,15 @@ with tabs[2]:
                     "활동내용": activity
                 }
                 
+                # 해당 일차의 계획에 새로운 일정 추가
                 st.session_state.plans[day_key].append(new_plan)
+                
+                # 시간을 기준으로 정렬
+                st.session_state.plans[day_key] = sorted(
+                    st.session_state.plans[day_key],
+                    key=lambda x: x['시간']
+                )
+                
                 st.success(f"{selected_date}에 일정이 추가되었습니다.")
 
         # 현재 일정 표시
@@ -329,7 +337,10 @@ with tabs[2]:
                 current_date = start_date + timedelta(days=day_num - 1)
                 date_str = current_date.strftime("%m/%d")
                 
-                for plan in sorted(plans, key=lambda x: x['시간']):
+                # 각 일차의 계획을 시간순으로 정렬
+                sorted_plans = sorted(plans, key=lambda x: x['시간'])
+                
+                for plan in sorted_plans:
                     df_data.append({
                         "일차": f"{day_key} ({date_str})",
                         "시간": plan['시간'],
