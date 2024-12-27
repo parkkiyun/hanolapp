@@ -220,7 +220,7 @@ if 'step' in st.session_state and st.session_state['step'] == 3:
                 replacements = {
                     "{1}": st.session_state['grade'],
                     "{2}": st.session_state['class_name'],
-                    "{3}": str(data_row['번호']),
+                    "{3}": int(data_row['번호']),
                     "{성명}": data_row['성명'],
                     "{결석사유}": data_row['사유'],
                     "{결석시작일}": data_row['결석시작일'],
