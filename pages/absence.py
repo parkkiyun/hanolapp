@@ -218,24 +218,26 @@ if 'step' in st.session_state and st.session_state['step'] == 3:
                 # 각 학생의 데이터를 템플릿에 적용하여 새로운 문서에 추가
                 temp_doc = Document(template_path)
                 replacements = {
-                    "{1}": st.session_state['grade'],
-                    "{2}": st.session_state['class_name'],
-                    "{3}": int(data_row['번호']),
-                    "{성명}": data_row['성명'],
-                    "{결석사유}": data_row['사유'],
-                    "{결석시작일}": data_row['결석시작일'],
-                    "{결석종료일}": data_row['결석종료일'],
+                    "{1}": str(st.session_state['grade']),
+                    "{2}": str(st.session_state['class_name']),
+                    "{3}": str(int(data_row['번호'])),
+                    "{성명}": str(data_row['성명']),
+                    "{결석사유}": str(data_row['사유']),
+                    "{결석시작일}": str(data_row['결석시작일']),
+                    "{결석종료일}": str(data_row['결석종료일']),
                     "{결석일수}": str(data_row['결석일수']),
-                    "{결석확인일}": data_row['결석확인일'],
-                    "{담임교사 성명}": st.session_state['teacher_name']
+                    "{결석확인일}": str(data_row['결석확인일']),
+                    "{담임교사 성명}": str(st.session_state['teacher_name'])
                 }
 
-                # 텍스트 치환 함수
+                # 텍스트 치환 함수 수정
                 def replace_text_in_paragraph(paragraph, replacements):
                     for run in paragraph.runs:
+                        text = run.text
                         for key, value in replacements.items():
-                            if key in run.text:
-                                run.text = run.text.replace(key, value)
+                            if key in text:
+                                text = text.replace(key, value)
+                        run.text = text
 
                 # 문서 내 텍스트 치환
                 for paragraph in temp_doc.paragraphs:
