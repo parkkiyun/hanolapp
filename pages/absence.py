@@ -1,5 +1,4 @@
 import streamlit as st
-from app.auth_manager import AuthManager
 from app.sidebar_manager import SidebarManager
 from pathlib import Path
 import os
@@ -14,18 +13,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 권한 체크
-auth_manager = AuthManager()
-auth_manager.check_page_access("absence")
-
 # 사이드바 렌더링
 sidebar = SidebarManager()
 sidebar.render_sidebar()
-
-# 로그인 상태가 아니면 리다이렉트
-if not st.session_state.get("authenticated", False):
-    st.error("이 페이지는 교사 로그인이 필요합니다.")
-    st.switch_page("pages/dashboard.py")
 
 import pandas as pd
 from datetime import datetime, timedelta
@@ -171,7 +161,7 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
                 
                 # 각 출결구분별로 데이터 분리
                 attendance_types = data['출결구분'].unique()
-                st.write("### 결석 유형별 데이터")
+                st.write("### 결석 신고서 선택")
                 st.info("결석신고서를 생성할 학생을 선택해주세요.")
                 
                 all_selected_indices = []  # 모든 선택된 인덱스를 저장할 리스트
@@ -333,4 +323,3 @@ st.info(
 
 st.markdown("---")
 st.markdown("<div style='text-align: right;'>제작자: 박기윤</div>", unsafe_allow_html=True)
-
