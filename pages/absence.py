@@ -138,17 +138,14 @@ if st.button("입력 완료", key="next_step_button"):
     st.session_state['teacher_name'] = teacher_name
     st.session_state['step'] = 2
 
-# Step 2: 엑셀 파일 업로드 및 처리 단계
+# Step 2: 엑셀 파일 업로드 및 행 선택 단계
 if 'step' in st.session_state and st.session_state['step'] == 2:
-    st.write("### 엑셀 파일 업로드하기")
+    st.write("### 엑셀 파일 업로드 및 행 선택")
 
     uploaded_file = st.file_uploader("엑셀 파일 업로드", type=["xlsx", "xls"], key="file_uploader")
 
     if uploaded_file is not None:
         try:
-            # 파일명 확인
-            st.write("### 처리 중인 파일명:", uploaded_file.name)
-            
             # 업로드된 파일을 임시 파일로 저장
             with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
                 temp_file.write(uploaded_file.getvalue())
@@ -171,13 +168,69 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
                 st.error("처리할 데이터가 없습니다.")
             else:
                 st.session_state['processed_data'] = data
-                data = st.data_editor(data, key='data_editor', use_container_width=True)
-                st.session_state['processed_data'] = data
-
-                col1, col2 = st.columns([1, 1], gap="small")
+                
+                # 각 출결구분별로 데이터 분리
+                attendance_types = data['출결구분'].unique()
+                st.write("### 결석 유형별 데이터")
+                st.info("결석신고서를 생성할 학생을 선택해주세요.")
+                
+                all_selected_indices = []  # 모든 선택된 인덱스를 저장할 리스트
+                
+                # 탭 생성
+                tabs = st.tabs([f"{attendance_type}" for attendance_type in attendance_types])
+                
+                for tab, attendance_type in zip(tabs, attendance_types):
+                    with tab:
+                        type_data = data[data['출결구분'] == attendance_type].copy()
+                        # '선택' 컬럼 추가
+                        type_data['선택'] = False
+                        
+                        # 모두 선택 버튼 추가
+                        col1, col2 = st.columns([1, 4])
+                        with col1:
+                            if st.button("모두 선택", key=f"select_all_{attendance_type}"):
+                                type_data['선택'] = True
+                        
+                        # 데이터프레임을 표시하고 선택 가능하게 만들기
+                        edited_df = st.data_editor(
+                            type_data,
+                            hide_index=True,
+                            column_config={
+                                "선택": st.column_config.CheckboxColumn(
+                                    "선택",
+                                    help="DOCX 파일로 추출할 행을 선택하세요",
+                                    default=False,
+                                )
+                            },
+                            key=f"editor_{attendance_type}"
+                        )
+                        
+                        # 선택된 행의 인덱스 수집
+                        selected_rows = edited_df[edited_df["선택"]]
+                        all_selected_indices.extend(selected_rows.index.tolist())
+                
+                # 선택된 행 저장
+                if all_selected_indices:
+                    selected_data = data.loc[all_selected_indices]
+                    st.session_state['selected_data'] = selected_data
+                    
+                    # 선택된 데이터 요약 표시
+                    st.write("### 선택된 데이터 요약")
+                    summary_cols = st.columns(len(attendance_types))
+                    for col, attendance_type in zip(summary_cols, attendance_types):
+                        with col:
+                            count = len(selected_data[selected_data['출결구분'] == attendance_type])
+                            st.metric(f"{attendance_type}", f"{count}건")
+                else:
+                    st.session_state['selected_data'] = pd.DataFrame()
+                
+                # 버튼 배치
+                col1, col2, col3 = st.columns([1, 1, 1], gap="small")
                 with col1:
                     st.button("이전 단계로 이동", on_click=lambda: st.session_state.update({'step': 1}))
                 with col2:
+                    st.button("선택 초기화", on_click=lambda: st.session_state.update({'selected_data': pd.DataFrame()}))
+                with col3:
                     st.button("DOCX 생성 및 다운로드하기", on_click=lambda: st.session_state.update({'step': 3}))
 
         except Exception as e:
@@ -188,17 +241,12 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
 if 'step' in st.session_state and st.session_state['step'] == 3:
     st.write("### DOCX 생성 및 다운로드")
 
-    processed_data = st.session_state.get('processed_data', pd.DataFrame())
+    processed_data = st.session_state.get('selected_data', pd.DataFrame())
 
     if not processed_data.empty:
-        st.write("처리된 데이터에 기반하여 DOCX 파일을 생성합니다.")
-
         for attendance_type, template_file_name in TEMPLATE_FILES.items():
-            # 질병결석 케이스를 위한 특별 처리
-            if attendance_type == '질병결석':
-                filtered_data = processed_data[processed_data['출결구분'].str.contains('질병.*결석', regex=True)]
-            else:
-                filtered_data = processed_data[processed_data['출결구분'] == attendance_type]
+            # 모든 출결구분에 대해 동일한 필터링 적용
+            filtered_data = processed_data[processed_data['출결구분'] == attendance_type]
 
             if filtered_data.empty:
                 continue

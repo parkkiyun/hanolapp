@@ -15,11 +15,13 @@ def process_excel(file_path):
     df[['번호', '성명']] = df[['번호', '성명']].ffill()
 
     # Step 2: 출결구분 데이터 전처리 및 필터링
+    print("2-1. 변환 전 출결구분 값들:", df['출결구분'].unique())
     df['출결구분'] = df['출결구분'].astype(str).apply(
-        lambda x: '질병결석' if ('질병' in x and '결석' in x) else x.strip()
+        lambda x: '질병결석' if ('질병' in x and '결석' in x) else 
+                 '출석인정결석' if x.strip() == '출석' or x.strip() == '출석인정결석' else 
+                 '기타결석' if x.strip() == '기타결석' else x.strip()
     )
-    
-    print("2. 전처리 후 출결구분 값들:", df['출결구분'].unique())
+    print("2-2. 변환 후 출결구분 값들:", df['출결구분'].unique())
     
     # Step 3: Filter valid data rows
     valid_types = ['출석인정결석', '질병결석', '기타결석']
