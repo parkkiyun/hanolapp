@@ -145,5 +145,3 @@ def process_excel(file_path):
         processed_data = pd.DataFrame(columns=columns_order)
 
     return processed_data
-
-
