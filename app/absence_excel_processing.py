@@ -21,6 +21,14 @@ def process_excel(file_path):
                  '출석인정결석' if x.strip() == '출석' or x.strip() == '출석인정결석' else 
                  '기타결석' if x.strip() == '기타결석' else x.strip()
     )
+    
+    # 사유 열 전처리
+    df['사유'] = df['사유'].astype(str).apply(
+        lambda x: x.split('으로 인한')[0] if '으로 인한' in x else
+                 x.split('로 인한')[0] if '로 인한' in x else
+                 x
+    )
+    
     print("2-2. 변환 후 출결구분 값들:", df['출결구분'].unique())
     
     # Step 3: Filter valid data rows
