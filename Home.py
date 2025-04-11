@@ -9,7 +9,12 @@ import qrcode
 st.set_page_config(
     page_title="스마트 문서 시스템",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/parkkiyun/hanolapp',
+        'Report a bug': "https://github.com/parkkiyun/hanolapp/issues",
+        'About': "# 스마트 문서 시스템 v1.0"
+    }
 )
 
 # URL 파라미터 체크 및 리다이렉션
