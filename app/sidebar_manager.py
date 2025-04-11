@@ -15,15 +15,6 @@ class SidebarManager:
     
     def render_sidebar(self):
         with st.sidebar:
-            # 사이드바 스타일 설정
-            st.markdown("""
-                <style>
-                    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
-                        display: none;
-                    }
-                </style>
-            """, unsafe_allow_html=True)
-            
             # 이미지 추가
             ROOT_DIR = Path(__file__).parent.parent.absolute()
             SIDEBAR_IMAGE_PATH = ROOT_DIR / "images" / "sidebar_logo.png"
@@ -41,19 +32,19 @@ class SidebarManager:
             st.title("메뉴")
             
             # 홈으로 가기 버튼
-            if st.button("🏠 홈으로", key="home"):
-                st.switch_page("Home.py")
+            if st.button("홈으로", key="home"):
+                st.switch_page("홈.py")
             
             st.markdown("---")
             
             # 메뉴 구성
-            if st.button("📝 위임장 관리", key="delegation"):
-                st.switch_page("pages/delegation_login.py")
-            if st.button("📋 결석신고서", key="absence"):
-                st.switch_page("pages/absence.py")
-            if st.button("✍️ 위임장 작성", key="write"):
-                st.switch_page("pages/write_delegation.py")
-            if st.button("📝 교외체험학습 신청서", key="field_request"):
-                st.switch_page("pages/field_trip_request.py")
-            if st.button("📋 교외체험학습 결과보고서", key="field_report"):
-                st.switch_page("pages/field_trip_report.py") 
+            if st.button("위임장 관리", key="delegation"):
+                st.switch_page("위임장_관리.py")
+            if st.button("결석신고서", key="absence"):
+                st.switch_page("결석신고서.py")
+            if st.button("위임장 작성", key="write"):
+                st.switch_page("위임장_작성.py")
+            if st.button("교외체험학습 신청서", key="field_request"):
+                st.switch_page("교외체험학습_신청서.py")
+            if st.button("교외체험학습 결과보고서", key="field_report"):
+                st.switch_page("교외체험학습_결과보고서.py") 
