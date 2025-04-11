@@ -5,8 +5,18 @@ from pathlib import Path
 class AuthManager:
     def __init__(self):
         config_path = Path(__file__).parent.parent / "config" / "page_access.json"
-        with open(config_path, 'r', encoding='utf-8') as f:
-            self.access_config = json.load(f)
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                self.access_config = json.load(f)
+        except FileNotFoundError:
+            # 기본 설정 사용
+            self.access_config = {
+                "delegation_login": ["teacher"],
+                "absence": ["teacher"],
+                "field_trip_request": ["all"],
+                "field_trip_report": ["all"],
+                "write_delegation": ["all"]
+            }
 
     def is_teacher_page(self, page_name):
         """페이지가 교사 전용인지 확인"""

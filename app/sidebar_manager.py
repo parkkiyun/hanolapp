@@ -12,6 +12,7 @@ class SidebarManager:
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
         except FileNotFoundError:
+            st.warning("사이드바 로고 이미지를 찾을 수 없습니다.")
             return None
     
     def render_sidebar(self):
