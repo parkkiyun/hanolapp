@@ -33,18 +33,18 @@ class SidebarManager:
             
             # 홈으로 가기 버튼
             if st.button("홈으로", key="home"):
-                st.switch_page("홈.py")
+                st.switch_page("Home.py")
             
             st.markdown("---")
             
             # 메뉴 구성
             if st.button("위임장 관리", key="delegation"):
-                st.switch_page("위임장_관리.py")
+                st.switch_page("pages/위임장_관리.py")
             if st.button("결석신고서", key="absence"):
-                st.switch_page("결석신고서.py")
+                st.switch_page("pages/결석신고서.py")
             if st.button("위임장 작성", key="write"):
-                st.switch_page("위임장_작성.py")
+                st.switch_page("pages/위임장_작성.py")
             if st.button("교외체험학습 신청서", key="field_request"):
-                st.switch_page("교외체험학습_신청서.py")
+                st.switch_page("pages/교외체험학습_신청서.py")
             if st.button("교외체험학습 결과보고서", key="field_report"):
-                st.switch_page("교외체험학습_결과보고서.py") 
+                st.switch_page("pages/교외체험학습_결과보고서.py") 
