@@ -60,7 +60,7 @@ with col1:
     - 위임장 양식 관리
     """)
     if st.button("위임장 생성하기", key="create_delegation"):
-        st.switch_page("pages/write_delegation.py")
+        st.switch_page("pages/위임장_작성.py")
 
 with col2:
     st.markdown("""
