@@ -114,7 +114,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
         if st.button("바로가기 →", key="goto_absence"):
-            st.switch_page("pages/absence.py")
+            st.switch_page("pages/결석신고서.py")
     
     with col3:
         st.markdown("""
