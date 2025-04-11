@@ -4,6 +4,7 @@ gatherUsageStats = false
 [server]
 enableXsrfProtection = false
 enableCORS = false
+headless = true
 
 [theme]
 base = "light"
