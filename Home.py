@@ -104,7 +104,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
         if st.button("바로가기 →", key="goto_delegation"):
-            st.switch_page("pages/delegation_login.py")
+            st.switch_page("pages/위임장_관리.py")
     
     with col2:
         st.markdown("""
