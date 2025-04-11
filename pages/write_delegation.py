@@ -8,7 +8,6 @@ from io import BytesIO
 import sys
 from pathlib import Path
 from app.sidebar_manager import SidebarManager
-from app.auth_manager import AuthManager
 
 # 현재 디렉토리를 Python 경로에 추가
 current_dir = Path(__file__).parent
@@ -45,12 +44,14 @@ else:
     form_config = form_configs["학업성적관리위원회 위임장"]
 
 # 로고 이미지 로드 및 크기 조정
-logo = Image.open("images/logo.png")
-# 서브타이틀 높이에 맞추도록 크기 조정 (약 40px 높이로 축소)
-logo_height = 40
-aspect_ratio = logo.size[0] / logo.size[1]
-logo_width = int(logo_height * aspect_ratio)
-logo = logo.resize((logo_width, logo_height))
+try:
+    logo = Image.open("images/logo.png")
+    logo_height = 40
+    aspect_ratio = logo.size[0] / logo.size[1]
+    logo_width = int(logo_height * aspect_ratio)
+    logo = logo.resize((logo_width, logo_height))
+except FileNotFoundError:
+    logo = None
 
 # 타이틀과 서브타이틀을 포함할 컨테이너
 col1, col2, col3 = st.columns([1, 6, 1])
@@ -96,26 +97,23 @@ with col2:
     """, unsafe_allow_html=True)
 
     # 로고와 서브타이틀을 하나의 컨테이너에 배치
-    st.markdown(
-        f"""
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="data:image/png;base64,{image_to_base64(logo)}" 
-                     width="{logo_width}px" 
-                     height="{logo_height}px" 
-                     style="object-fit: contain;">
+    if logo:
+        st.markdown(
+            f"""
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="data:image/png;base64,{image_to_base64(logo)}" 
+                         width="{logo_width}px" 
+                         height="{logo_height}px" 
+                         style="object-fit: contain;">
+                </div>
+                <div class="title-container">
+                    <h3 style="margin: 0; padding-left: 5px;">온양한올고등학교</h3>
+                </div>
             </div>
-            <div class="title-container">
-                <h3 style="margin: 0; padding-left: 5px;">온양한올고등학교</h3>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-# 권한 체크
-auth_manager = AuthManager()
-auth_manager.check_page_access("위임장작성")
+            """,
+            unsafe_allow_html=True
+        )
 
 # 사이드바 렌더링
 sidebar_manager = SidebarManager()
@@ -133,6 +131,7 @@ with tabs[1]:
 
 with tabs[2]:
     application_preview.render()
+
 # 푸터 추가
 st.markdown("---")  # 구분선
 st.markdown(
