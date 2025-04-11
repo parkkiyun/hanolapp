@@ -68,8 +68,8 @@ with col2:
     - 생성된 위임장 목록
     - 위임장 상태 관리
     """)
-    if st.button("위임장 목록 보기", key="view_delegations"):
-        st.switch_page("pages/delegation_list.py")
+    if st.button("위임장 목록 보기", key="list"):
+        st.switch_page("pages/위임장_목록.py")
 
 # 푸터
 st.markdown("---")
