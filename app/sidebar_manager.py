@@ -17,30 +17,16 @@ class SidebarManager:
     
     def render_sidebar(self):
         with st.sidebar:
-            # 한올고등학교 로고
-            logo_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'hanol_logo.png')
-            if os.path.exists(logo_path):
-                logo = Image.open(logo_path)
-                st.image(logo, use_column_width=True)
-            else:
-                st.error("로고 이미지를 찾을 수 없습니다.")
+            # 이미지 추가
+            ROOT_DIR = Path(__file__).parent.parent.absolute()
+            SIDEBAR_IMAGE_PATH = ROOT_DIR / "images" / "sidebar_logo.png"
             
-            st.title("메뉴")
-            
-            # 홈으로 가기 버튼
-            if st.button("홈으로", key="home"):
-                st.switch_page("Home.py")
-            
-            st.markdown("---")
-            
-            # 메뉴 구성
-            if st.button("위임장 관리", key="delegation"):
-                st.switch_page("pages/위임장_관리.py")
-            if st.button("결석신고서", key="absence"):
-                st.switch_page("pages/결석신고서.py")
-            if st.button("위임장 작성", key="write"):
-                st.switch_page("pages/위임장_작성.py")
-            if st.button("교외체험학습 신청서", key="field_request"):
-                st.switch_page("pages/교외체험학습_신청서.py")
-            if st.button("교외체험학습 결과보고서", key="field_report"):
-                st.switch_page("pages/교외체험학습_결과보고서.py") 
+            if SIDEBAR_IMAGE_PATH.exists():
+                image_base64 = self.get_base64_image(SIDEBAR_IMAGE_PATH)
+                if image_base64:
+                    st.markdown(f"""
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <img src="data:image/png;base64,{image_base64}" 
+                                 style="width: 180px; margin: auto;">
+                        </div>
+                    """, unsafe_allow_html=True) 
