@@ -7,6 +7,7 @@ enableCORS = false
 headless = true
 maxUploadSize = 200
 port = 8501
+maxMessageSize = 200
 
 [theme]
 base = "light"
