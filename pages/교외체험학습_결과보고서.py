@@ -160,11 +160,11 @@ if logo_base64:
     st.markdown(f"""
         <div style="display: flex; align-items: center; justify-content: center;">
             <img src="data:image/png;base64,{logo_base64}" alt="로고" style="margin-right: 10px; width: 40px; height: 40px;">
-            <h3 style="margin: 0;">온양한올고등학교</h3>
+            <h3 style="margin: 0;">한올고등학교</h3>
         </div>
     """, unsafe_allow_html=True)
 else:
-    st.markdown("<h3 style='text-align: center;'>온양한올고등학교</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>한올고등학교</h3>", unsafe_allow_html=True)
 
 # 단일 탭 그룹 생성
 tabs = st.tabs([

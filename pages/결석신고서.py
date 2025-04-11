@@ -97,14 +97,14 @@ if logo_base64:
         st.markdown(f"""
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
                 <img src="data:image/png;base64,{logo_base64}" alt="로고" style="margin-right: 10px; width: 30px; height: 30px;">
-                <h3 style="margin: 0;">온양한올고등학교</h3>
+                <h3 style="margin: 0;">한올고등학교</h3>
             </div>
         """, unsafe_allow_html=True)
 else:
     # 로고 없을 때도 가운데 정렬
     st.markdown("""
         <h1 style='text-align: center;'>스마트 결석신고서</h1>
-        <h3 style='text-align: center;'>온양한올고등학교</h3>
+        <h3 style='text-align: center;'>한올고등학교</h3>
     """, unsafe_allow_html=True)
 
 st.markdown("---")

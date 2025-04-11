@@ -108,7 +108,7 @@ with col2:
                          style="object-fit: contain;">
                 </div>
                 <div class="title-container">
-                    <h3 style="margin: 0; padding-left: 5px;">온양한올고등학교</h3>
+                    <h3 style="margin: 0; padding-left: 5px;">한올고등학교</h3>
                 </div>
             </div>
             """,
