@@ -15,6 +15,15 @@ class SidebarManager:
     
     def render_sidebar(self):
         with st.sidebar:
+            # 사이드바 스타일 설정
+            st.markdown("""
+                <style>
+                    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+                        display: none;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
             # 이미지 추가
             ROOT_DIR = Path(__file__).parent.parent.absolute()
             SIDEBAR_IMAGE_PATH = ROOT_DIR / "images" / "sidebar_logo.png"
