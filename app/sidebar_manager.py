@@ -1,18 +1,16 @@
 import streamlit as st
-from app.auth_manager import AuthManager
 import base64
 from pathlib import Path
 
 class SidebarManager:
     def __init__(self):
-        self.auth_manager = AuthManager()
+        pass
     
     def get_base64_image(self, image_path):
         try:
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
         except FileNotFoundError:
-            st.warning("사이드바 로고 이미지를 찾을 수 없습니다.")
             return None
     
     def render_sidebar(self):
@@ -39,32 +37,14 @@ class SidebarManager:
             
             st.markdown("---")
             
-            # 로그인 상태에 따른 메뉴 구성
-            if st.session_state.get("authenticated", False):
-                st.markdown("### 교사 메뉴")
-                if st.button("📝 위임장 관리", key="delegation"):
-                    st.switch_page("pages/delegation_login.py")
-                if st.button("📋 결석신고서", key="absence"):
-                    st.switch_page("pages/absence.py")
-                
-                st.markdown("---")
-                st.markdown("### 일반 메뉴")
-            
-            # 일반 메뉴 (항상 표시)
+            # 메뉴 구성
+            if st.button("📝 위임장 관리", key="delegation"):
+                st.switch_page("pages/delegation_login.py")
+            if st.button("📋 결석신고서", key="absence"):
+                st.switch_page("pages/absence.py")
             if st.button("✍️ 위임장 작성", key="write"):
                 st.switch_page("pages/write_delegation.py")
             if st.button("📝 교외체험학습 신청서", key="field_request"):
                 st.switch_page("pages/field_trip_request.py")
             if st.button("📋 교외체험학습 결과보고서", key="field_report"):
-                st.switch_page("pages/field_trip_report.py")
-            
-            # 로그인/로그아웃 버튼
-            st.markdown("---")
-            if st.session_state.get("authenticated", False):
-                if st.button("로그아웃", key="logout"):
-                    self.auth_manager.logout()
-                    st.rerun()
-    
-    def logout(self):
-        st.session_state.authenticated = False
-        st.rerun() 
+                st.switch_page("pages/field_trip_report.py") 

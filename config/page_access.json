@@ -1,8 +1,0 @@
-{
-    "dashboard": ["teacher"],
-    "delegation_login": ["teacher"],
-    "absence": ["teacher"],
-    "field_trip_request": ["all"],
-    "field_trip_report": ["all"],
-    "write_delegation": ["all"]
-} 
