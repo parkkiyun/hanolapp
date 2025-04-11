@@ -10,8 +10,23 @@ from app.absence_excel_processing import process_excel
 st.set_page_config(
     page_title="결석신고서",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/parkkiyun/hanolapp',
+        'Report a bug': "https://github.com/parkkiyun/hanolapp/issues",
+        'About': "# 스마트 문서 시스템 v1.0"
+    }
 )
+
+# 사이드바 설정
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            min-width: 250px;
+            max-width: 250px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # 사이드바 렌더링
 sidebar = SidebarManager()

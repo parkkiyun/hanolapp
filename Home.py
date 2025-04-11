@@ -17,6 +17,20 @@ st.set_page_config(
     }
 )
 
+# 사이드바 설정
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            min-width: 250px;
+            max-width: 250px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# 사이드바 렌더링
+sidebar = SidebarManager()
+sidebar.render_sidebar()
+
 # URL 파라미터 체크 및 리다이렉션
 query_params = st.query_params
 redirect_to = query_params.get("page", None)
@@ -26,10 +40,6 @@ if redirect_to:
         st.switch_page("pages/field_trip_request.py")
     elif redirect_to == "field_trip_report":
         st.switch_page("pages/field_trip_report.py")
-
-# 사이드바 렌더링
-sidebar = SidebarManager()
-sidebar.render_sidebar()
 
 # 로고 이미지 로드 및 크기 조정
 logo = Image.open("images/sidebar_logo.png")
