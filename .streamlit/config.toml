@@ -6,6 +6,7 @@ enableXsrfProtection = false
 enableCORS = false
 headless = true
 maxUploadSize = 200
+port = 8501
 
 [theme]
 base = "light"
