@@ -41,6 +41,31 @@ import base64
 from openpyxl import load_workbook
 import logging
 
+# 결석확인일 계산 함수 추가
+def calculate_confirmation_date(end_date):
+    """결석종료일로부터 5일 이내의 평일을 찾아 반환"""
+    # datetime 객체로 변환
+    if isinstance(end_date, str):
+        try:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        except ValueError:
+            try:
+                end_date = datetime.strptime(end_date, '%Y.%m.%d')
+            except ValueError:
+                return datetime.now().strftime('%Y.%m.%d')  # 기본값
+    
+    # 5일 이내의 날짜 중 평일(월-금) 찾기
+    for i in range(1, 6):
+        check_date = end_date + timedelta(days=i)
+        # 평일이면 (0=월요일, 6=일요일)
+        if check_date.weekday() < 5:
+            return check_date.strftime('%Y.%m.%d')
+    
+    # 5일 이내에 평일이 없으면 종료일로부터 다음 월요일
+    while (end_date + timedelta(days=1)).weekday() != 0:
+        end_date = end_date + timedelta(days=1)
+    return (end_date + timedelta(days=1)).strftime('%Y.%m.%d')
+
 # 배포 환경에서의 경로 처리
 if os.getenv('STREAMLIT_SERVER_PATH'):  # Streamlit Cloud 환경인 경우
     ROOT_DIR = Path('/mount/src/hanolapp')  # Streamlit Cloud의 기본 경로
@@ -113,8 +138,6 @@ st.markdown("---")
 # Step 1: 정보 입력 단계
 st.write("### 정보 입력")
 
-if 'confirmation_date' not in st.session_state:
-    st.session_state['confirmation_date'] = datetime.now()
 if 'grade' not in st.session_state:
     st.session_state['grade'] = "1"
 if 'class_name' not in st.session_state:
@@ -129,15 +152,10 @@ with col1:
 with col2:
     class_name = st.selectbox("반", [f"{i}반" for i in range(1, 13)], key="class_selectbox").replace("반", "")
 
-# 담임교사 성명, 결석확인일을 한 행에 배치
-col3, col4 = st.columns(2)
-with col3:
-    teacher_name = st.text_input("담임교사 성명", key="teacher_name_input")
-with col4:
-    confirmation_date = st.date_input("결석확인일", st.session_state['confirmation_date'], key="confirmation_date_input")
+# 담임교사 성명만 입력 (결석확인일은 자동 계산)
+teacher_name = st.text_input("담임교사 성명", key="teacher_name_input")
 
 if st.button("입력 완료", key="next_step_button"):
-    st.session_state['confirmation_date_str'] = confirmation_date.strftime('%Y.%m.%d')
     st.session_state['grade'] = grade
     st.session_state['class_name'] = class_name
     st.session_state['teacher_name'] = teacher_name
@@ -165,12 +183,16 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
             except Exception as e:
                 logging.warning(f"임시 파일 삭제 중 오류가 발생했습니다: {e}")
 
-            # 결석확인일 추가
-            data['결석확인일'] = st.session_state.get('confirmation_date_str', '')
+            # 출결구분 필터링 추가 - 질병결석, 출석인정결석, 기타결석만 유지
+            valid_attendance_types = ["질병결석", "출석인정결석", "기타결석"]
+            data = data[data['출결구분'].isin(valid_attendance_types)]
+
+            # 각 학생의 결석종료일에 따라 결석확인일 자동 계산
+            data['결석확인일'] = data['결석종료일'].apply(calculate_confirmation_date)
 
             # 데이터 검증 및 표시
             if data.empty:
-                st.error("처리할 데이터가 없습니다.")
+                st.error("처리할 데이터가 없습니다. 질병결석, 출석인정결석, 기타결석 데이터가 있는지 확인하세요.")
             else:
                 st.session_state['processed_data'] = data
                 
@@ -314,12 +336,15 @@ if 'step' in st.session_state and st.session_state['step'] == 3:
             # 수정된 파일 저장
             master_doc.save(output_docx.name)
 
+            # 다운로드 버튼 레이블에 현재 달을 표시
+            current_month = datetime.now().month
+            
             # Streamlit에서 파일 다운로드 제공
             with open(output_docx.name, "rb") as f:
                 st.download_button(
-                    label=f"{st.session_state['grade']}학년 {st.session_state['class_name']}반 {attendance_type} 결석신고서({confirmation_date.month}월).docx 다운로드",
+                    label=f"{st.session_state['grade']}학년 {st.session_state['class_name']}반 {attendance_type} 결석신고서({current_month}월).docx 다운로드",
                     data=f,
-                    file_name=f"{st.session_state['grade']}학년 {st.session_state['class_name']}반 {attendance_type} 결석신고서({confirmation_date.month}월).docx",
+                    file_name=f"{st.session_state['grade']}학년 {st.session_state['class_name']}반 {attendance_type} 결석신고서({current_month}월).docx",
                     key=f"{attendance_type}_download"
                 )
     else:
