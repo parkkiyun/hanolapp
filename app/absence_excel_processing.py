@@ -18,7 +18,8 @@ def process_excel(file_path):
     print("2-1. 변환 전 출결구분 값들:", df['출결구분'].unique())
     df['출결구분'] = df['출결구분'].astype(str).apply(
         lambda x: '질병결석' if ('질병' in x and '결석' in x) else 
-                 '출석인정결석' if x.strip() == '출석' or x.strip() == '출석인정결석' else 
+                 '출석인정결석' if x.strip() == '출석인정결석' else 
+                 '출석' if x.strip() == '출석' else
                  '기타결석' if x.strip() == '기타결석' else x.strip()
     )
     
@@ -32,7 +33,7 @@ def process_excel(file_path):
     print("2-2. 변환 후 출결구분 값들:", df['출결구분'].unique())
     
     # Step 3: Filter valid data rows
-    valid_types = ['출석인정결석', '질병결석', '기타결석']
+    valid_types = ['출석인정결석', '질병결석', '기타결석']  # '출석'은 제외
     filtered_data = df[df['출결구분'].isin(valid_types)].copy()
     
     print("3. 필터링 후 출결구분 값들:", filtered_data['출결구분'].unique())
