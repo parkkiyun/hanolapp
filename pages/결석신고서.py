@@ -213,10 +213,13 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
                         type_data['선택'] = False
                         
                         # 모두 선택 버튼 추가
-                        col1, col2 = st.columns([1, 4])
+                        col1, col2 = st.columns([1, 1])
                         with col1:
                             if st.button("모두 선택", key=f"select_all_{attendance_type}"):
                                 type_data['선택'] = True
+                        with col2:
+                            if st.button("선택 초기화", key=f"reset_{attendance_type}"):
+                                type_data['선택'] = False
                         
                         # 데이터프레임을 표시하고 선택 가능하게 만들기
                         edited_df = st.data_editor(
@@ -252,12 +255,10 @@ if 'step' in st.session_state and st.session_state['step'] == 2:
                     st.session_state['selected_data'] = pd.DataFrame()
                 
                 # 버튼 배치
-                col1, col2, col3 = st.columns([1, 1, 1], gap="small")
+                col1, col2 = st.columns([1, 1], gap="small")
                 with col1:
                     st.button("이전 단계로 이동", on_click=lambda: st.session_state.update({'step': 1}))
                 with col2:
-                    st.button("선택 초기화", on_click=lambda: st.session_state.update({'selected_data': pd.DataFrame()}))
-                with col3:
                     st.button("DOCX 생성 및 다운로드하기", on_click=lambda: st.session_state.update({'step': 3}))
 
         except Exception as e:
